@@ -1,0 +1,2 @@
+# docs
+Kaspa documentation
