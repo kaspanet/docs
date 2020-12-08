@@ -79,6 +79,12 @@ SubmitTransaction
 type SubmitTransactionRequestMessage struct {
 	Transaction *RPCTransaction
 }
+
+type SubmitTransactionResponseMessage struct {
+    TransactionID string
+    
+    Error *RPCError
+}
 ```
 Dependant Types
 ---------------
