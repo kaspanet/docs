@@ -6,4 +6,9 @@ Kaspa is the fastest pure proof of work consensus engine in the crypto space. It
 
 Kaspa aims to become the most vibrant platform for proof of work enthusiasts, developers, and researchers.
 
-## Principles
+## Table of Contents
+
+- Getting Started
+- About Kaspa
+- [Reference](/Reference)
+- Community
