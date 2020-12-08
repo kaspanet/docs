@@ -1,41 +1,28 @@
 Wallet API
 ==========
 
-BlockAdded Notifications
+VirtualSelectedParentBlueScoreChanged Notifications
 ------------------------
 ```
-type NotifyBlockAddedRequestMessage struct {}
+type NotifyVirtualSelectedParentBlueScoreChangedRequestMessage struct {}
 
-type NotifyBlockAddedResponseMessage struct {
+type NotifyVirtualSelectedParentBlueScoreChangedResponseMessage struct {
 	Error *RPCError
 }
 
-type BlockAddedNotificationMessage struct {
-	Block *RPCBlock
+type VirtualSelectedParentBlueScoreChangedNotificationMessage struct {
+	BlueScore uint64
 }
 ```
-ChainChanged Notifications
+GetVirtualSelectedParentBlueScore
 --------------------------
 ```
-type NotifyChainChangedRequestMessage struct {}
+type GetVirtualSelectedParentBlueScoreRequestMessage struct {}
 
-type NotifyChainChangedResponseMessage strcut {
+type GetVirtualSelectedParentBlueScoreResponseMessage strcut {
+    BlueScore uint64
+
 	Error *RPCError
-}
-
-type ChainChangedNotificationMessage struct {
-	RemovedChainBlockHashes []string
-	AddedChainBlocks []*ChainBlock
-}
-
-type ChainBlock struct {
-	Hash string
-	AcceptedBlocks []*AcceptedBlock
-}
-
-type AcceptedBlock struct {
-	Hash string
-	AcceptedTransactionIDs []string
 }
 ```
 UTXOsChanged Notifications
@@ -123,23 +110,5 @@ type RPCUTXOEntry struct {
 	ScriptPubKey string
 	BlockBlueScore uint64
 	IsCoinbase bool
-}
-
-type RPCBlock struct {
-	BlockHeader *RPCBlockHeader
-	Transactions []*RPCTransaction
-	Hash string
-	BlueScore uint64
-}
-
-type RPCBlockHeader struct {
-	Version int32
-	ParentHashes []string
-	HashMerkleRoot string
-	AcceptedIDMerkleRoot string
-	UTXOCommitment string
-	Timestamp int64
-	Bits uint64
-	Nonce uint64
 }
 ```
