@@ -50,7 +50,8 @@ type NotifyUTXOsChangedResponseMessage struct {
 }
 
 type UTXOsChangedNotificationMessage struct {
-	Entries []*UTXOsByAddressesEntry
+	Added []*UTXOsByAddressesEntry
+	Removed []*RPCOutpoint
 }
 ```
 GetUTXOsByAddresses
