@@ -119,6 +119,7 @@ type RPCUTXOEntry struct {
 type RPCBlock struct {
 	BlockHeader *RPCBlockHeader
 	Transactions []*RPCTransaction
+	BlueScore uint64
 }
 
 type RPCBlockHeader struct {
