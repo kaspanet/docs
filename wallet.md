@@ -122,6 +122,7 @@ type RPCUTXOEntry struct {
 	Amount uint64
 	ScriptPubKey string
 	BlockBlueScore uint64
+	IsCoinbase bool
 }
 
 type RPCBlock struct {
