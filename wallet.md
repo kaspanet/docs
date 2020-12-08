@@ -11,7 +11,7 @@ type NotifyVirtualSelectedParentBlueScoreChangedResponseMessage struct {
 }
 
 type VirtualSelectedParentBlueScoreChangedNotificationMessage struct {
-	BlueScore uint64
+	VirtualSelectedParentBlueScore uint64
 }
 ```
 GetVirtualSelectedParentBlueScore
@@ -85,8 +85,6 @@ type RPCTransaction struct {
 	Gas uint64
 	PayloadHash string
 	Payload string
-	ID string
-	Hash string
 }
 
 type RPCTransactionInput struct {
