@@ -98,6 +98,8 @@ type RPCTransaction struct {
 	Gas uint64
 	PayloadHash string
 	Payload string
+	ID string
+	Hash string
 }
 
 type RPCTransactionInput struct {
