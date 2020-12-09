@@ -4,4 +4,4 @@
 
 ## Table of Contents
 
-- [Wallet API](/API/wallet.md)
+- [Wallet API](API/wallet.md)
