@@ -8,7 +8,7 @@ Kaspa aims to become the most vibrant platform for proof of work enthusiasts, de
 
 ## Table of Contents
 
-- [Getting Started](/Getting Started)
-- [About Kaspa](/About Kaspa)
+- [Getting Started](/Getting%20Started)
+- [About Kaspa](/About%20Kaspa)
 - [Reference](/Reference)
 - [Community](/Community)
