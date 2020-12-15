@@ -1,7 +1,5 @@
 # RPC API
 
-[This is a work in progress.]
-
 This is an external Kaspad API. The information below is intended for users who run a full Kaspa node - miners, researchers etc.
 
 ## Kaspa CTL

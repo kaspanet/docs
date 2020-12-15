@@ -1,7 +1,5 @@
 # P2P API
 
-[This is a work in progress.]
-
 The P2P API is part of the Kaspad software. It is used automatically by any running Kaspad for communicating with the Kaspa network and thus is transparent to Kaspad end-users. The information below is intended for software developers.
 
 ## API Flows
@@ -182,4 +180,4 @@ This is the protocol to be used by a node that is far behind to "sync up" quickl
 #### Flow:
 
 1. Wait for a MsgReject.
-2. When a MsgReject is received ...
+2. When a MsgReject is received, print the included Reason and disconnect the peer.
