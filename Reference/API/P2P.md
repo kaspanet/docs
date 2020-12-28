@@ -184,4 +184,4 @@ This is the protocol to be used by a node that is far behind to "sync up" quickl
 
 ---
 
-[Back](../../Reference/README.md) | [Docs Home](../../../docs/README.md)
+[Back](../../Reference/README.md) | [Docs Home](../../../main/README.md)

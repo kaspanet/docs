@@ -113,4 +113,4 @@ type RPCUTXOEntry struct {
 
 ---
 
-[Back](../../Reference/README.md) | [Docs Home](../../../docs/README.md)
+[Back](../../Reference/README.md) | [Docs Home](../../../main/README.md)

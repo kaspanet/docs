@@ -252,4 +252,4 @@ In addition, the page contains a tool for recovery of the wallet.
 
 ---
 
-[Back](/Getting%20Started/README.md) | [Docs Home](../../docs/README.md)
+[Back](/Getting%20Started/README.md) | [Docs Home](../../main/README.md)

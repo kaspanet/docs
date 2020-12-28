@@ -108,4 +108,4 @@ Kaspad is licensed under the copyfree [ISC License](https://choosealicense.com/l
 
 ---
 
-[Back](/Getting%20Started/README.md) | [Docs Home](../../docs/README.md)
+[Back](/Getting%20Started/README.md) | [Docs Home](../../main/README.md)
