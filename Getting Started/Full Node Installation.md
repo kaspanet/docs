@@ -8,7 +8,7 @@ This project is currently under active development and is in a pre-Alpha state. 
 
 ## Prerequisites
 
-### Go Language Installation**
+### Go Language Installation
 
 1. Install Go following the installation instructions here:
 [http://golang.org/doc/install](http://golang.org/doc/install)  
@@ -70,7 +70,7 @@ Kaspad (and utilities) are now installed in $GOPATH/bin. **If you did not alread
 
 ### Installation Using KDX
 
-See [this guide](/Desktop%20Installation.md) for installing the Kaspa desktop application.
+See [this guide](/Getting%20Started/Desktop%20Installation.md) for installing the Kaspa desktop application.
 
 ## Starting Kaspad
 
@@ -106,3 +106,5 @@ The [integrated github issue tracker](https://github.com/kaspanet/kaspad/issues)
 
 Kaspad is licensed under the copyfree [ISC License](https://choosealicense.com/licenses/isc/).
 
+[Back](/Getting%20Started/README.md)
+[Docs Home](../../docs/README.md)

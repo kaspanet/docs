@@ -104,7 +104,7 @@ Checking the  ***Advanced*** checkbox adds several features to the Settings tab 
 
 - **Service Configuration**
 
-![Service Configuration](Service_Configuration.png)
+    ![Service Configuration](Service_Configuration.png)
 
     This is a command-line interface for configuring the way the Kaspad and Kaspaminer run. For the list of possible configurable parameters, see TBD by Anton.
 
@@ -113,14 +113,14 @@ Checking the  ***Advanced*** checkbox adds several features to the Settings tab 
 
     You may select and load a KDX configuration as a premade configuration template.
 
-![Configuration Templates](Configuration_Templates.png)
+    ![Configuration Templates](Configuration_Templates.png)
 
 
     The following configurations are available:
 
-    - Kaspad Node: A single Kaspad node connected to the global Kaspa network
-    - Kaspad Node + Miner: A single Kaspad node and a miner connected to the global Kaspa network
-    - Self-Contained Kaspad Mining: A local self-contained Kaspa network comprising two connected Kaspa nodes and a miner
+    Kaspad Node: A single Kaspad node connected to the global Kaspa network
+    Kaspad Node + Miner: A single Kaspad node and a miner connected to the global Kaspa network
+    Self-Contained Kaspad Mining: A local self-contained Kaspa network comprising two connected Kaspa nodes and a miner
 
     To change the configuration, select a template from the Select Configuration Template drop-down menu, select the required network (Testnet or Mainnet) from the Network menu and click ***Reset Configuration***.
 
@@ -138,14 +138,14 @@ Checking the  ***Advanced*** checkbox adds several features to the Settings tab 
 
     This is the console output of Kaspad.
 
-![Kaspad Tab](Kaspad_Tab.png)
+    ![Kaspad Tab](Kaspad_Tab.png)
 
 - Kaspaminer tab:
 
 
     This is the console output of Kaspaminer.
 
-![Kaspaminer Tab](Kaspaminer_Tab.png)
+    ![Kaspaminer Tab](Kaspaminer_Tab.png)
 
 ### Wallet Tab
 
@@ -162,13 +162,13 @@ You can either open an existing wallet or create a new wallet.
 
     The Create Wallet window opens.
 
-![Create Wallet](Create_Wallet.png)
+    ![Create Wallet](Create_Wallet.png)
 
 2. Enter a password twice and click ***Create Wallet***.
 
     The Wallet page opens.
 
-![Wallet Page](Wallet_Page.png)
+    ![Wallet Page](Wallet_Page.png)
 
 **To open an existing wallet:**
 
@@ -191,14 +191,14 @@ In addition, the page contains a tool for recovery of the wallet.
 
     The Recovery screen opens.
 
-![Recovery Screen](Wallet_Recovery_2.png)
+    ![Recovery Screen](Wallet_Recovery_2.png)
 
 2. Enter your password and click ***Next***.
 
 
     An ordered seed phrase is displayed.
 
-![Seed Phrase](Wallet_Recovery_3.png)
+    ![Seed Phrase](Wallet_Recovery_3.png)
 
 
     You have to write it down securely or memorize it. The next screens will check whether you remember the seed phrase.
@@ -208,9 +208,9 @@ In addition, the page contains a tool for recovery of the wallet.
 
     Answer the questions as prompted and click ***Done***.
 
-![Recovery 4](Wallet_Recovery_4.png) ![Recovery 5](Wallet_Recovery_5.png)
+    ![Recovery 4](Wallet_Recovery_4.png) ![Recovery 5](Wallet_Recovery_5.png)
 
-![Recovery 6](Wallet_Recovery_6.png) ![Recovery 7](Wallet_Recovery_7.png)
+    ![Recovery 6](Wallet_Recovery_6.png) ![Recovery 7](Wallet_Recovery_7.png)
 
     The recovery seed phrase has been generated.
 
@@ -223,7 +223,7 @@ In addition, the page contains a tool for recovery of the wallet.
 
     The Send window opens.
 
-![Send Window](Send.png)
+    ![Send Window](Send.png)
 
 2. Enter the recipient&#39;s address in the Kaspa network and the amount to be sent. You may add a note.
 3. Click ***Send***.
@@ -231,7 +231,7 @@ In addition, the page contains a tool for recovery of the wallet.
 
     The Password window opens.
 
-![Password Window](Password_Page.png)
+    ![Password Window](Password_Page.png)
 
 4. Enter your password and click ***Confirm Send***.
 
@@ -244,8 +244,11 @@ In addition, the page contains a tool for recovery of the wallet.
 
     The Receive window opens.
 
-![Receive Window](Receive.png)
+    ![Receive Window](Receive.png)
 
  
 
     This window displays the sender&#39;s address and its QR code. Press ***Close***.
+
+[Back](/Getting%20Started/README.md)
+[Docs Home](../../docs/README.md)

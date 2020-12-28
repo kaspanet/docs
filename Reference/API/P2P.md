@@ -181,3 +181,6 @@ This is the protocol to be used by a node that is far behind to "sync up" quickl
 
 1. Wait for a MsgReject.
 2. When a MsgReject is received, print the included Reason and disconnect the peer.
+
+[Back](../../Reference/README.md)
+[Docs Home](../../../docs/README.md)
