@@ -106,5 +106,8 @@ The [integrated github issue tracker](https://github.com/kaspanet/kaspad/issues)
 
 Kaspad is licensed under the copyfree [ISC License](https://choosealicense.com/licenses/isc/).
 
+---
+
 [Back](/Getting%20Started/README.md)
+
 [Docs Home](../../docs/README.md)

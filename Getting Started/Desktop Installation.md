@@ -24,7 +24,7 @@ The KDX application enables the user to do the following:
 
     The KDX GUI window opens. The Wallet tab is displayed.
 
-![Wallet tab](Open_Wallet.png)
+    ![Wallet tab](Open_Wallet.png)
 
     A Kaspa node (Kaspad) is up and running on Testnet.
 
@@ -250,5 +250,6 @@ In addition, the page contains a tool for recovery of the wallet.
 
     This window displays the sender&#39;s address and its QR code. Press ***Close***.
 
-[Back](/Getting%20Started/README.md)
-[Docs Home](../../docs/README.md)
+---
+
+[Back](/Getting%20Started/README.md) | [Docs Home](../../docs/README.md)
