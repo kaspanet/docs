@@ -178,5 +178,6 @@ Extracts a transaction out of the request message and attempts to add it to the 
     * string txId
     * RPCError error = 1000
 
-[Back](../../Reference/README.md)
-[Docs Home](../../../docs/README.md)
+---
+
+[Back](../../Reference/README.md) | [Docs Home](../../../docs/README.md)
