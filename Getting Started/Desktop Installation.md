@@ -13,26 +13,22 @@ The KDX application enables the user to do the following:
 - Create a local, self-contained Testnet for running Kaspa (including mining)
 - Send and receive funds using a wallet
 
-# Download and Installation
+## Download and Installation
 
 **To install the KDX application:**
 
-1. Download the KDX binaries from here:
-
-
-    [https://kdx.app](https://kdx.app/)
-
-1. Run the file kdx-v1.4.0-windows-x64.exe.
-2. Follow the instructions to install KDX.
+1. Download the KDX binaries from [https://kdx.app](https://kdx.app/).
+2. Run the file kdx-v1.4.0-windows-x64.exe.
+3. Follow the instructions to install KDX.
 
 
     The KDX GUI window opens. The Wallet tab is displayed.
 
 ![Wallet tab](Open_Wallet.png)
 
-A Kaspa node (Kaspad) is up and running on Testnet.
+    A Kaspa node (Kaspad) is up and running on Testnet.
 
-# Operation
+## Operation
 
 When opened, the KDX GUI is in Advanced mode (see below) and displays six tabs, of which the following three are standard (non-Advanced):
 
@@ -40,13 +36,13 @@ When opened, the KDX GUI is in Advanced mode (see below) and displays six tabs, 
 - Settings
 - Wallet
 
-## Kaspa Tab
+### Kaspa Tab
 
 The Kaspa tab shows the status of the locally running full Kaspa node (Kaspad).
 
 ![Kaspa tab](Kaspa_Tab.png)
 
-### Kaspad
+#### Kaspad
 
 The Kaspad part of the tab displays the parameters of the running Kaspad:
 
@@ -62,7 +58,7 @@ The Kaspad part of the tab displays the parameters of the running Kaspad:
 - Median Time – network time calculated from block timestamps
 - Mempool Size – number of pending transactions (broadcasted but not accepted)
 
-### Kaspaminer
+#### Kaspaminer
 
 Kaspaminer can be running or stopped depending on whether the Enable Mining checkbox is checked in the Settings tab (see below).
 
@@ -76,23 +72,23 @@ Kaspaminer can be running or stopped depending on whether the Enable Mining chec
 
 In addition, the KASPA tab provides links to various Kaspa-related resources (Documentation, GitHub and Discord chat) and KDX release notes and displays license information for various KDX components. _(NOT UPDATED, NOT RELEVANT)_
 
-## Settings Tab
+### Settings Tab
 
 ![Settings Tab](Settings_Tab_1.png)
 
-### Data Folder
+#### Data Folder
 
 This is the folder in which all KDX data is stored. This includes Kaspad blockchain data, log files and the wallet file.
 
 To change the folder&#39;s location, click the ***Select Folder*** button and choose another folder in the Select Folder to Upload window.
 
-### User Interface Color Theme
+#### User Interface Color Theme
 
 The default color theme is dark text on a white background. To reverse the color theme, check the ***Dark Theme*** checkbox.
 
 ![Dark Theme](Dark_Theme.png)
 
-### Turn On/Off Advanced Settings and Process Control
+#### Turn On/Off Advanced Settings and Process Control
 
 Checking the  ***Advanced*** checkbox adds several features to the Settings tab and three new tabs to the KDX GUI.
 
@@ -110,7 +106,7 @@ Checking the  ***Advanced*** checkbox adds several features to the Settings tab 
 
 ![Service Configuration](Service_Configuration.png)
 
-This is a command-line interface for configuring the way the Kaspad and Kaspaminer run. For the list of possible configurable parameters, see TBD by Anton.
+    This is a command-line interface for configuring the way the Kaspad and Kaspaminer run. For the list of possible configurable parameters, see TBD by Anton.
 
 - **Configuration Templates**
 
@@ -120,13 +116,13 @@ This is a command-line interface for configuring the way the Kaspad and Kaspamin
 ![Configuration Templates](Configuration_Templates.png)
 
 
-The following configurations are available:
+    The following configurations are available:
 
-- Kaspad Node: A single Kaspad node connected to the global Kaspa network
-- Kaspad Node + Miner: A single Kaspad node and a miner connected to the global Kaspa network
-- Self-Contained Kaspad Mining: A local self-contained Kaspa network comprising two connected Kaspa nodes and a miner
+    - Kaspad Node: A single Kaspad node connected to the global Kaspa network
+    - Kaspad Node + Miner: A single Kaspad node and a miner connected to the global Kaspa network
+    - Self-Contained Kaspad Mining: A local self-contained Kaspa network comprising two connected Kaspa nodes and a miner
 
-To change the configuration, select a template from the Select Configuration Template drop-down menu, select the required network (Testnet or Mainnet) from the Network menu and click ***Reset Configuration***.
+    To change the configuration, select a template from the Select Configuration Template drop-down menu, select the required network (Testnet or Mainnet) from the Network menu and click ***Reset Configuration***.
 
 - **Additional tabs**
 
@@ -151,7 +147,7 @@ To change the configuration, select a template from the Select Configuration Tem
 
 ![Kaspaminer Tab](Kaspaminer_Tab.png)
 
-## Wallet Tab
+### Wallet Tab
 
 When the Wallet tab is opened for the first time after starting the KDX application, it displays the Open Wallet dialog box.
 
@@ -168,19 +164,19 @@ You can either open an existing wallet or create a new wallet.
 
 ![Create Wallet](Create_Wallet.png)
 
-1. Enter a password twice and click ***Create Wallet***.
+2. Enter a password twice and click ***Create Wallet***.
 
-The Wallet page opens.
+    The Wallet page opens.
 
 ![Wallet Page](Wallet_Page.png)
 
 **To open an existing wallet:**
 
-1. In the Open Wallet dialog box, enter your password and click ***Open Wallet***.
+In the Open Wallet dialog box, enter your password and click ***Open Wallet***.
 
 The Wallet page opens, same as above.
 
-### Wallet Page
+#### Wallet Page
 
 The page displays the wallet&#39;s balance, both available and pending (broadcasted but not accepted), and recent transactions.
 
@@ -197,7 +193,7 @@ In addition, the page contains a tool for recovery of the wallet.
 
 ![Recovery Screen](Wallet_Recovery_2.png)
 
-1. Enter your password and click ***Next***.
+2. Enter your password and click ***Next***.
 
 
     An ordered seed phrase is displayed.
@@ -205,9 +201,9 @@ In addition, the page contains a tool for recovery of the wallet.
 ![Seed Phrase](Wallet_Recovery_3.png)
 
 
-You have to write it down securely or memorize it. The next screens will check whether you remember the seed phrase.
+    You have to write it down securely or memorize it. The next screens will check whether you remember the seed phrase.
 
-1. Click ***Next***.
+3. Click ***Next***.
 
 
     Answer the questions as prompted and click ***Done***.
@@ -216,7 +212,7 @@ You have to write it down securely or memorize it. The next screens will check w
 
 ![Recovery 6](Wallet_Recovery_6.png) ![Recovery 7](Wallet_Recovery_7.png)
 
-The recovery seed phrase has been generated.
+    The recovery seed phrase has been generated.
 
 #### Sending Funds
 
@@ -229,22 +225,22 @@ The recovery seed phrase has been generated.
 
 ![Send Window](Send.png)
 
-1. Enter the recipient&#39;s address in the Kaspa network and the amount to be sent. You may add a note.
-2. Click ***Send***.
+2. Enter the recipient&#39;s address in the Kaspa network and the amount to be sent. You may add a note.
+3. Click ***Send***.
 
 
     The Password window opens.
 
 ![Password Window](Password_Page.png)
 
-3. Enter your password and click ***Confirm Send***.
+4. Enter your password and click ***Confirm Send***.
 
 
     The sending transaction appears in the list of recent transactions on the Wallet page and the available balance is decreased.
 
 #### Receiving Funds
 
-1. On the Wallet page, click ***Receive***.
+5. On the Wallet page, click ***Receive***.
 
     The Receive window opens.
 
@@ -252,4 +248,4 @@ The recovery seed phrase has been generated.
 
  
 
-This window displays the sender&#39;s address and its QR code. Press ***Close***.
+    This window displays the sender&#39;s address and its QR code. Press ***Close***.

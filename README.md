@@ -9,8 +9,8 @@ Kaspa aims to become the most vibrant platform for proof of work enthusiasts, de
 ## Table of Contents
 
 1. [Getting Started](/Getting%20Started)
-    * [Desktop User Installation](Getting%20Started/Desktop%20User%20Installation.md)
-    * [Developer Installation](Getting%20Started/Developer%20Installation.md)
+    * [Desktop Installation](Getting%20Started/Desktop%20Installation.md)
+    * [Full Node Installation](Getting%20Started/Full%20Node%20Installation.md)
     * [Wallet](Getting%20Started/Wallet.md)
 2. [About Kaspa](/About%20Kaspa)
     * [Throughput](About%20Kaspa/Throughput.md)
