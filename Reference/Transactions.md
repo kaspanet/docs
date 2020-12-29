@@ -7,9 +7,9 @@
    Size | Field | Description
    --- | --- | ---
    4 bytes | Version | Specifies rules 
-   8 bytes | Input Counter| Number of inputs and their properties
+   8 bytes | Input Counter| Number of inputs 
    Variable| Inputs | One or more transaction input structures
-   8 bytes | Output Counter| Number of outputs and their properties
+   8 bytes | Output Counter| Number of outputs 
    Variable | Outputs | One or more transaction output structures
    8 bytes | Locktime | what units are used for locktime ?
    20 bytes | Subnetwork Id | Reserved. The default value is 20 zeroed bytes.
