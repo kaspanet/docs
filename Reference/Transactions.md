@@ -4,52 +4,42 @@
 
 
 ## Transaction Structure
-   Size | Field | Description
-   --- | --- | ---
-   4 bytes | Version | Specifies rules 
-   8 bytes | Input Counter| Number of inputs 
-   Variable| Inputs | One or more transaction input structures
-   8 bytes | Output Counter| Number of outputs 
-   Variable | Outputs | One or more transaction output structures
-   8 bytes | Locktime | what units are used for locktime ?
-   20 bytes | Subnetwork Id | Reserved. The default value is 20 zeroed bytes.
-   8 bytes | GAS | ?
-   32 bytes | Payload Hash | 32 zeroed bytes
-   8 bytes | Payload ? | ?
-   
+   Size     | Field         | Description
+   -------- | ------------- | -------------
+   2 bytes  | Version       | Specifies rules
+   8 bytes  | Input Counter | Number of inputs
+   Variable | Inputs        | One or more transaction input structures
+   8 bytes  | Output Counter| Number of outputs
+   Variable | Outputs       | One or more transaction output structures
+   8 bytes  | Locktime      | what units are used for locktime ?
+   20 bytes | Subnetwork Id | Reserved. The default value is 20 zeroed bytes
+   8 bytes  | GAS           | Reserved. the default value is 8 zeroed bytes
+   32 bytes | Payload Hash  | 32 zeroed bytes
+   8 bytes  | Payload size  | Reserved. the default value is 8 zeroed bytes
+   Variable | Payload       | Reserved. the default value is empty
+
 
 
    ### Transaction Input Structure
-   Size | Field | Description
-   --- | --- | ---
-   32 bytes | Transaction ID (Hash) | Points to the transaction containing the UTXO to be spent
-   4 bytes | Index | The index number of the UTXO to be spent
-   8 bytes | script.length | length of signature Script
-   Variable | signature Script | Unlocking script that fulfills the conditions of the UTXO locking...
-   8 bytes | Sequence Number | 
+   Size     | Field           | Description
+   -------- | --------------- | -----------
+   32 bytes | Transaction ID  | Points to the transaction containing the UTXO to be spent
+   4 bytes  | Index           | The index number of the UTXO to be spent
+   8 bytes  | Script length   | length of signature Script
+   Variable | Signature Script| Unlocking script that fulfills the conditions of the UTXO (Usualy containing a signature)
+   8 bytes  | Sequence Number | Related to time locks
 
-
-   ### Coinbase Transaction Input Structure
-   Size | Field | Description
-   --- | --- | ---
-   32 bytes | Transaction ID (Hash) | All bits are zero ?
-   4 bytes | Index | all bits are one: 0xFFFFFFFF ?
-   1-9 bytes | Coinbase Data Size | Length of the coinbse data, from 2 to 100 bytes ?
-   Variable | Coinbase data | 
-   8 bytes | Sequence Number | 
-  
 
    ### Transaction Output Structure
-   Size | Field | Description
-   --- | --- | ---
-   8 bytes | Amount | Kaspa value 
-   8 bytes | script.length | length of Script
+   Size     | Field             | Description
+   -------- | ----------------- | -----------
+   8 bytes  | Amount            | Kaspa value
+   8 bytes  | Script version    | The version of the script (currently only 0 is supported)
+   8 bytes  | Script length     | length of Script
    Variable | Script Public key | Locking script defining the conditions needed to spend the output
-   
 
 
 
-   
 ## Transaction Locktime
 TO DO
 
@@ -63,32 +53,38 @@ Reserved for future use.
 
 #### Transaction Structure
 ```json
- "transaction": {
-    "version": 1,
-    "inputs": [
+ "Transaction": {
+    "Version": 0,
+    "Inputs": [
       {
-        "previousOutpoint": {
-          "transactionId": "ece2916ff2a69d6ddac0c3ff259b8f3032383033e1bd0887152a1c990c1b2418",
-          "index": 0
+        "PreviousOutpoint": {
+          "TransactionID": "ece2916ff2a69d6ddac0c3ff259b8f3032383033e1bd0887152a1c990c1b2418",
+          "Index": 0
         },
-        "signatureScript": "4175203423d29312e470771ab3b643655879d7cba721874db14ae3a8904da69201769dc28d5bfddd30c80f46b720d0fc53791c4a32d80dd5157b77f3429a314a130120c26f917722916764419faac71bd6ae2b97e6385ec6cc5d1f85d3fc87790029f4",
-        "sequence": 4294967295
+        "SignatureScript": "41bbfd299edb70e5998541684013a275a685eb69ea720c3abce08f2f03f3f5e6abc17d474ca720992e03652275cdabf01d80e8eb5084524e532e59b68b7a55d8850120f9a7699db2eec6a4116373fde8e5c7f46af3d81c96b912cdc0e2dd67d00ed6d7",
+        "Sequence": 0
       }
     ],
-    "outputs": [
+    "Outputs": [
       {
-        "amount": 1000,
-        "scriptPubKey": "76a914ef948254c1dfba15a5c34d5840ce2e988e32654a88ac"
+        "Value": 2500000000,
+        "ScriptPublicKey": {
+          "Script": "76a914663f308631fe9daedb16a8ff45a56112861c02af88ac",
+          "Version": 0
+        }
       },
       {
-        "amount": 4999998600,
-        "scriptPubKey": "76a91488963bdc0de0775612aea7003b40b34ed97b4de788ac"
+        "Value": 4999998600,
+        "ScriptPublicKey": {
+          "Script": "76a914663f308631fe9daedb16a8ff45a56112861c02af88ac",
+          "Version": 0
+        }
       }
     ],
-    "lockTime": 0,
-    "payloadHash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "subnetworkId": "0000000000000000000000000000000000000000",
-    "fee": 400
+    "LockTime": 0,
+    "SubnetworkID": "0000000000000000000000000000000000000000",
+    "PayloadHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "Payload": null,
+    "Fee": 400
   }
   ```
-
