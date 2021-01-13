@@ -34,7 +34,7 @@
    Size     | Field             | Description
    -------- | ----------------- | -----------
    8 bytes  | Amount            | Kaspa value
-   8 bytes  | Script version    | The version of the script (currently only 0 is supported)
+   2 bytes  | Script version    | The version of the script (currently only 0 is supported)
    8 bytes  | Script length     | length of Script
    Variable | Script Public key | Locking script defining the conditions needed to spend the output
 
