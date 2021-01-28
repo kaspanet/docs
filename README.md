@@ -2,9 +2,9 @@
 
 [This repo is a work in progress.]
 
-Kaspa is the fastest pure proof of work consensus engine in the crypto space. It is based on PHANTOM consensus, a scalable generalization of Nakamoto consensus.
+Kaspa is the fastest pure proof-of-work consensus engine in the crypto space. It is based on [PHANTOM](https://eprint.iacr.org/2018/104.pdf) consensus, a scalable generalization of Nakamoto consensus. Kaspa aims to become the most vibrant platform for proof of work enthusiasts, developers, and researchers. It is currently in pre-alpha testnet phase.
 
-Kaspa aims to become the most vibrant platform for proof of work enthusiasts, developers, and researchers.
+This repository contains documentation about Kaspa. The documentation is a work in progress. To connect with the Kaspa community, join the Discord [here](https://discord.gg/QBKmJyt).
 
 ## Table of Contents
 
