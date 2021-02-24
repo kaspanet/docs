@@ -2,11 +2,11 @@
 
 The following is a running list of projects important to Kaspa. These would benefit from leadership and/or contributions from the community.
 
-1. Rollup support.
-2. Implementing a client in Rust to improve performance of Kaspad and potentially increase block rate validation capability by 10x.
+1. Support for Rollups: Defining the API that the base layer should expose to the rollup; implementing the required functionality on the bae layer; integrating with existing rollup projects.
+2. Implementaion of a Kaspad client in a more performant language (e.g. Rustlang) which will enable processing blocks order-of-magnitude faster and allow an order-of-magnitude increase in block rate.
 3. Research on MEV and flashbots resistance as it relates to blockDAGs.
 4. Support for Lightning Network; op_codes that make Lightning compatibility easier. 
-5. Implementing an (interactive) batch of Shnorr signatures.
+5. Implementation of batch validation (from O(n) to O(n/logn) validation time) of Shnorr signatures; and of interactive aggregation (from O(n) space and time to O(1) space and time)).
 6. Integration of off-chain privacy mixing hubs (e.g., ValueShuffle).
 
 Discussions of these projects and suggestions for other Kaspa-related projects can take place on [Discord](https://discord.gg/RBXH7gkZnz).
