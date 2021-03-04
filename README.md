@@ -13,6 +13,7 @@ This repository contains documentation about Kaspa. The documentation is a work 
     * [Full Node Installation](Getting%20Started/Full%20Node%20Installation.md)
     * [Wallet](Getting%20Started/Wallet.md)
 2. [About Kaspa](/About%20Kaspa/README.md)
+    * [Overview](/About%20Kaspa/Overview.md)
     * [Throughput](About%20Kaspa/Throughput.md)
     * [Proof of Work](About%20Kaspa/Proof%20of%20Work.md)
     * [Monetary Policy](About%20Kaspa/Monetary%20Policy.md)
