@@ -1,4 +1,4 @@
-# KDX User Installation Guide
+# KDX: Desktop Installation Guide
 
 The Kaspa Desktop Experience (KDX) application provides a user interface for running a full Kaspa node (Kaspad) ina desktop operating system environment. The application is intended for both software developers and non-technical users.
 

@@ -28,4 +28,6 @@ This repository contains documentation about Kaspa. The documentation is a work 
     * [API](Reference/API)
 4. [Community](/Community/README.md)
     * [Code Contribution Guidelines](https://github.com/kaspanet/kaspad/blob/master/CONTRIBUTING.md)
+    * [Kaspa Dashboard](Community/Dashboard.md)
+    * [Kaspa Block Explorer](Community/Block%20Explorer.md)
     * [Open Projects](Community/Open%20Projects.md)

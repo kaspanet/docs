@@ -1,6 +1,6 @@
 ![](RackMultipart20201215-4-15jlsns_html_ba4ab6024277b8b9.gif)
 
-# Kaspad: Installation Guide
+# Kaspad: Full Node Installation Guide
 
 Kaspad is a reference full node Kaspa implementation written in Go (golang).
 
