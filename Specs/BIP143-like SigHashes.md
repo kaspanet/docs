@@ -11,6 +11,20 @@ https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
 
 ## Specification
 
+### SigHashTypes
+The SigHashTypes are defined as follows:
+```
+	SigHashAll          SigHashType = 0b00000001
+	SigHashNone         SigHashType = 0b00000010
+	SigHashSingle       SigHashType = 0b00000100
+	SigHashAnyOneCanPay SigHashType = 0b10000000
+```
+
+Note this is different from bitcoin where SigHashSingle has the value 0b00000011.
+This was changed to make SigHashTypes a true bit-field
+
+### SigHash calculation
+
 A new transaction digest algorithm is defined:
 ```
 Blake2b of the serialization of:
