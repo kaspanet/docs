@@ -21,7 +21,9 @@ The SigHashTypes are defined as follows:
 ```
 
 Note this is different from bitcoin where SigHashSingle has the value 0b00000011.
-This was changed to make SigHashTypes a true bit-field
+This was changed to make SigHashType a true bit-field.
+In addition, SigHashType is always serialized as a single byte, whilst in bitcoin it is often serialized as 
+a 4-byte uint, and only 1-byte in the signature itself.
 
 ### SigHash calculation
 
@@ -42,7 +44,7 @@ Blake2b of the serialization of:
     12. tx.SubnetworkID (20-byte hash)
     13. tx.Gas (8-bytes unsigned little endian)
     14. payloadHash (32-byte hash)
-    15. SigHash type of the signature (4-bytes unsigned little endian)
+    15. SigHash type of the signature (1-byte unsigned little endian) (Note: this is different from bitcoin where it's 4-bytes)
     
 Where:
     tx - the transaction signed
