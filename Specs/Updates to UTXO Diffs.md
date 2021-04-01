@@ -64,15 +64,25 @@ selectedParent(a.k.a. B<sub>i</sub>'s).
 Therefore, we can reverse the order.
 In other words:
 ```
-For i := range [1..n]:
+For i := range [n..1]:
   Bi.UTXODiff = Bi+1.UTXODiff.Reverse()
   Bi.UTXODiffParent = Bi+1
 ```
 Once this is done, all blocks are going to have their 
 UTXODiffChildren in their anti-past.
 
-This should, and can, be done in a way that will be resilient to crashes
-mid-operation.
+Care should be taken when implementing the above process
+1. Reversal of each B<sub>i</sub> should happen in a separate database
+   transaction, otherwise we risk running out of memory.
+2. One should note that this process **has** to happen top-to-bottom:
+   bottom-to-top is not resilient to crashes.
+3. When working top-to-bottom, once B<sub>i</sub> is reversed, we no longer
+   have it's diff from B<sub>i-1</sub>, which has to be used in the next step,
+   when we reverse B<sub>i-1</sub>.  
+   Thus, we should keep this diff in memory up until we have finished reversing
+   B<sub>i-1</sub>.
+4. The diff between B<sub>n+1</sub> and B<sub>n+1</sub> is not readily-available
+   and should be calculated separately.
 
 ### Remaining Problems
 Two unsolved problems still remain:
