@@ -22,6 +22,7 @@ This repository contains documentation about Kaspa. The documentation is a work 
     * [Blocks](Reference/Blocks.md)
     * [BlockDAG](Reference/BlockDAG.md)
     * [PHANTOM Consensus](Reference/PHANTOM%20Consensus.md)
+    * [Pruning](Pruning.md)
     * [RPC](https://github.com/kaspanet/kaspad/blob/master/infrastructure/network/netadapter/server/grpcserver/protowire/rpc.md)
     * [API](Reference/API)
 4. [Community](/Community/README.md)
