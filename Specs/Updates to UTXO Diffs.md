@@ -66,7 +66,7 @@ In other words:
 ```
 For i := range [n..1]:
   Bi.UTXODiff = Bi+1.UTXODiff.Reverse()
-  Bi.UTXODiffParent = Bi+1
+  Bi.UTXODiffChild = Bi+1
 ```
 Once this is done, all blocks are going to have their 
 UTXODiffChildren in their anti-past.
