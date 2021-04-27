@@ -45,6 +45,25 @@ of the basic operations work with zero configuration (except the testnet flag).
 $ kaspad --testnet
 ```
 
+### Running miner (optional)
+After running a node you can launch a miner and start mining nodes.
+
+To run a miner you need to create a keypair to mine into:
+```bash
+$ wallet create --testnet
+```
+The result will look something like this:
+```
+This is your private key, granting access to all wallet funds. Keep it safe. Use it only when sending Kaspa.
+Private key (hex):      547f40e991a115b9cda6a5203a2a6f8031d76c46c6575228d213abf04b57a4e7
+
+This is your public address, where money is to be sent.
+Address (kaspa-testnet-4):      kaspatest:qzlhwgd94es8ww2nm2l7pkll2y50zshwsuefcezlql
+```
+Save the result somewhere, and run kaspaminer:
+```bash
+$ kaspaminer --testnet --miningaddr kaspatest:<YOUR_CREATED_ADDRESS>
+```
 
 ### Opening Ports
 
@@ -62,6 +81,7 @@ It's not required in order to participate in the network, but it's recommended t
 - 9th generation i7 8-core processor or AMD equivalent
 - 16 GB memory
 - 40 Mbit internet connection
+
 
 ### Installation Using KDX
 
