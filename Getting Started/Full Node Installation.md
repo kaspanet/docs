@@ -45,6 +45,25 @@ of the basic operations work with zero configuration (except the testnet flag).
 $ kaspad --testnet
 ```
 
+### Running a Miner (optional)
+After running kaspad you can launch a miner and start mining blocks.
+
+To run a miner you need to create a keypair to mine into:
+```bash
+$ wallet create --testnet
+```
+The result will look something like this:
+```
+This is your private key, granting access to all wallet funds. Keep it safe. Use it only when sending Kaspa.
+Private key (hex):      0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+This is your public address, where money is to be sent.
+Address (kaspa-testnet-4):      kaspatest:0123456789abcdef0123456789abcdef0123456789
+```
+Save the result somewhere, and run kaspaminer:
+```bash
+$ kaspaminer --testnet --miningaddr kaspatest:<YOUR_CREATED_ADDRESS>
+```
 
 ### Opening Ports
 
