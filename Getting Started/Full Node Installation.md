@@ -55,10 +55,10 @@ $ wallet create --testnet
 The result will look something like this:
 ```
 This is your private key, granting access to all wallet funds. Keep it safe. Use it only when sending Kaspa.
-Private key (hex):      547f40e991a115b9cda6a5203a2a6f8031d76c46c6575228d213abf04b57a4e7
+Private key (hex):      0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
 This is your public address, where money is to be sent.
-Address (kaspa-testnet-4):      kaspatest:qzlhwgd94es8ww2nm2l7pkll2y50zshwsuefcezlql
+Address (kaspa-testnet-4):      kaspatest:qzlhwgd94es8ww2nm2l7pkll2y50zshwsuefcezlqq
 ```
 Save the result somewhere, and run kaspaminer:
 ```bash
