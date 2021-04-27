@@ -45,8 +45,8 @@ of the basic operations work with zero configuration (except the testnet flag).
 $ kaspad --testnet
 ```
 
-### Running miner (optional)
-After running a node you can launch a miner and start mining nodes.
+### Running a Miner (optional)
+After running kaspad you can launch a miner and start mining blocks.
 
 To run a miner you need to create a keypair to mine into:
 ```bash
@@ -81,7 +81,6 @@ It's not required in order to participate in the network, but it's recommended t
 - 9th generation i7 8-core processor or AMD equivalent
 - 16 GB memory
 - 40 Mbit internet connection
-
 
 ### Installation Using KDX
 
