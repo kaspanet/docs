@@ -58,7 +58,7 @@ This is your private key, granting access to all wallet funds. Keep it safe. Use
 Private key (hex):      0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
 This is your public address, where money is to be sent.
-Address (kaspa-testnet-4):      kaspatest:qzlhwgd94es8ww2nm2l7pkll2y50zshwsuefcezlqq
+Address (kaspa-testnet-4):      kaspatest:0123456789abcdef0123456789abcdef0123456789
 ```
 Save the result somewhere, and run kaspaminer:
 ```bash
