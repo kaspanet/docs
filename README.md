@@ -18,7 +18,7 @@ This repository contains documentation about Kaspa. The documentation is a work 
     * [Proof of Work](/About%20Kaspa/Proof%20of%20Work.md)
     * [Monetary Policy](/About%20Kaspa/Monetary%20Policy.md)
     * [Pruning](/About%20Kaspa/Pruning.md)
-    * [Data Availability](/About%20Kaspa/Data%20Availability)
+    * [Data Availability](/About%20Kaspa/Data%20Availability.md)
  3. [Reference](/Reference/README.md)
     * [Transactions](Reference/Transactions.md)
     * [Blocks](Reference/Blocks.md)
