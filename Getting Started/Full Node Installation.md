@@ -57,7 +57,7 @@ You will be asked to choose a password for the wallet. After that you should run
 $ kaspawallet show-address --testnet
 ```
 
-Your screen will show you something like this
+Your screen will show you something like this:
 ```
 The wallet address is:
 kaspatest:0123456789abcdef0123456789abcdef0123456789
