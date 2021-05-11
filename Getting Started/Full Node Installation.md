@@ -50,17 +50,19 @@ After running kaspad you can launch a miner and start mining blocks.
 
 To run a miner you need to create a keypair to mine into:
 ```bash
-$ wallet create --testnet
+$ kaspawallet create --testnet
 ```
-The result will look something like this:
+You will be asked to choose a password for the wallet. After that you should run:
+```bash
+$ kaspawallet show-address --testnet
 ```
-This is your private key, granting access to all wallet funds. Keep it safe. Use it only when sending Kaspa.
-Private key (hex):      0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
-This is your public address, where money is to be sent.
-Address (kaspa-testnet-4):      kaspatest:0123456789abcdef0123456789abcdef0123456789
+Your screen will show you something like this:
 ```
-Save the result somewhere, and run kaspaminer:
+The wallet address is:
+kaspatest:0123456789abcdef0123456789abcdef0123456789
+```
+Copy the address and run kaspaminer with it:
 ```bash
 $ kaspaminer --testnet --miningaddr kaspatest:<YOUR_CREATED_ADDRESS>
 ```
