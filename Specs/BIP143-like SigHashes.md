@@ -33,18 +33,20 @@ Blake2b of the serialization of:
     1. tx.Version (2-bytes unsigned little endian)
     2. previousOutputsHash (32-byte hash)
     3. sequencesHash (32-byte hash)
-    4. txIn.PreviousOutpoint.TransactionID (32-byte hash)
-    5. txIn.PreviousOutpoint.Index (4-bytes unsigned little endian)
-    6. txIn.PreviousOutput.ScriptPubKeyVersion (2-bytes unsigned little endian)
-    7. txIn.PreviousOutput.ScriptPubKey (serialized as script)
-    8. txIn.PreviousOutput.Value (8-bytes unsigned little endian)
-    9. txIn.Sequence (8-bytes unsigned little endian)
-    10. outputsHash (32-byte hash)
-    11. tx.Locktime (8-bytes unsigned little endian)
-    12. tx.SubnetworkID (20-byte hash)
-    13. tx.Gas (8-bytes unsigned little endian)
-    14. payloadHash (32-byte hash)
-    15. SigHash type of the signature (1-byte unsigned little endian) (Note: this is different from bitcoin where it's 4-bytes)
+    4. sigOpCountsHash (32-byte has)
+    5. txIn.PreviousOutpoint.TransactionID (32-byte hash)
+    6. txIn.PreviousOutpoint.Index (4-bytes unsigned little endian)
+    7. txIn.PreviousOutput.ScriptPubKeyVersion (2-bytes unsigned little endian)
+    8. txIn.PreviousOutput.ScriptPubKey (serialized as script)
+    9. txIn.PreviousOutput.Value (8-bytes unsigned little endian)
+    10. txIn.Sequence (8-bytes unsigned little endian)
+    11. txIn.SigOpCount (1-byte unsigned little endian)
+    12. outputsHash (32-byte hash)
+    13. tx.Locktime (8-bytes unsigned little endian)
+    14. tx.SubnetworkID (20-byte hash)
+    15. tx.Gas (8-bytes unsigned little endian)
+    16. payloadHash (32-byte hash)
+    17. SigHash type of the signature (1-byte unsigned little endian) (Note: this is different from bitcoin where it's 4-bytes)
     
 Where:
     tx - the transaction signed
@@ -74,6 +76,13 @@ The semantics of most values are straightforward, except the following:
     1. previousOutpoint.TransactionId
     2. previousOutpoint.Index
   ```
+
+#### sigOpCountsHash
+* If ANYONECANPAY flag is set, then previousOutputsHash is
+  a uint256 of 0x0000......0000
+* Otherwise, sigOpCountsHash is the Blake2b hash of the serialization 
+  of the SigOpCount of all inputs
+  
 
 #### sequencesHash
 * If ANYONECANPAY, SINGLE or NONE sighash type is set, then sequencesHash is
