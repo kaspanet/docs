@@ -20,16 +20,14 @@ The process it takes is as follows:
    * Otherwise, verify the block's UTXO and decide whether its status becomes `StatusDisqualifiedFromChain` or `StatusUTXOValid`.
 
 
-Database Considerations
-=======================
+Performance Considerations
+==========================
 
 resolveBlockStatus is unique within the consensus in that it may process blocks other than the block that's currently being inserted via validateAndInsertBlock.\
-Maybe more importantly, **every time a block becomes UTXOValid the virtual's UTXO set changes.** This opens the database to potential corruption, where the DAG has state A and the UTXO has state B.
-
-As such, for every block that gets UTXO verified, a completely new and separate database transaction is opened. This transaction runs in parallel to the singular database transaction that encompasses the entirety of validateAndInsertBlock.\
+Since the selected parent chain that needs to ne updated may be very large, to conserve RAM, for every block that gets UTXO verified, a completely new and separate database transaction is opened. This transaction runs in parallel to the singular database transaction that encompasses the entirety of validateAndInsertBlock.\
 The only things that happen within the separate database transactions are:
 1. The BlockStatus of the current chain block is updated.
-2. The UTXO of the virtual is updated.
+2. The UTXO of the original block is updated.
 
 If the node is to crash, for example, between the third and the fourth block in the selected parent chain of the original validateAndInsertBlock block, observe that no harm will be done:
 * The first, second, and third blocks in the selected parent chain would have an updated BlockStatus and the virtual UTXO set would have been updated accordingly.
