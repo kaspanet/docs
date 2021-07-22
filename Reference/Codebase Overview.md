@@ -32,7 +32,7 @@ What Happens When Kaspad Starts
 1. The process entrypoint (`main.go`) immediately calls `app.StartApp()` (`app/app.go`).
 2. Command line arguments are read and components (including database and P2P and RPC servers) are initialized accordingly.
 3. The P2P connection manager (`infrastructure/network/connmanager`) is started and immediately attempts to connect to a number of previously-known peers. The peer addresses are stored in the P2P address manager (`infrastructure/network/addressmanager`).
-3. a. If, for whatever reason, there aren't enough known peers to connect to, the connection manager may poll the DNS Seeder for more addresses (`infrastructure/network/connmanager/connmanager.go` `ConnectionManager::seedFromDNS`).
+   * If, for whatever reason, there aren't enough known peers to connect to, the connection manager may poll the DNS Seeder for more addresses (`infrastructure/network/connmanager/connmanager.go` `ConnectionManager::seedFromDNS`).
 4. Once a peer is connected, both this kaspad and the remote kaspad initiate the handshake protocol (`app/protocol/flows/handshake`) in which sufficient data is exchanged for both peers to decide on whether to keep or drop the connection.
 5. This kaspad and the remote kaspad will now exchange messages according to the rest of the P2P protocol, which can be found in its entirety in the `app/protocol/flows` package.
 
@@ -49,8 +49,8 @@ How a Block Gets Added to the Block DAG
 7. The command is handled by kaspad in `app/rpc/rpchandles/submit_block.go`.
 8. The handler calls into the Consensus logical component and requests to add the solved block (`domain/consensus/processes/blockprocessor/validateandinsertblock.go` `blockProcessor::validateAndInsertBlock`).
 9. If the block had been successfully added to the DAG, the following processes occur in kaspad:
-9. a. Transactions that had been included in the block are removed from the mempool (`domain/miningmanager/mempool/handle_new_block_transactions.go`).
-9. b. The block is propagated to all the currently connected P2P peers. The peers handle block propagation messages in `app/protocol/flows/blockrelay`.
+    * Transactions that had been included in the block are removed from the mempool (`domain/miningmanager/mempool/handle_new_block_transactions.go`).
+    * The block is propagated to all the currently connected P2P peers. The peers handle block propagation messages in `app/protocol/flows/blockrelay`.
 
 
 How a Transaction Gets Added to the Mempool
