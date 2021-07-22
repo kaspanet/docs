@@ -1,0 +1,1 @@
+https://github.com/kaspanet/kaspad/issues/1030
