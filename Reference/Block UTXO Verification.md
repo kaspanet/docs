@@ -30,7 +30,7 @@ The only things that happen within the separate database transactions are:
 2. The UTXO of the current chain block is updated.
 
 If the node is to crash, for example, between the third and the fourth block in the selected parent chain of the original validateAndInsertBlock block, observe that no harm will be done:
-* The first, second, and third blocks in the selected parent chain would have an updated BlockStatus and the virtual UTXO set would have been updated accordingly.
+* The first, second, and third blocks in the selected parent chain would have an updated BlockStatus.
 * The fourth block and above would remain with their old `StatusUTXOPendingVerification` status.
 * The original validateAndInsertBlock block would not have been inserted to the DAG.
 
