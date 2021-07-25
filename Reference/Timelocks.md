@@ -15,5 +15,5 @@ All about Timelocks you can find here: [Timelocks](https://github.com/bitcoinboo
         actual relative locktime, unsigned int32
         
  * Disable relative time-based timelocks (Ignoring the type flag)
- * Adds special opcodes to support timelocks when building a script: AddLockTimeNumber, AddSequenceNumber.
+ * Adds special functions to support timelocks when building a script: AddLockTimeNumber, AddSequenceNumber.
         
