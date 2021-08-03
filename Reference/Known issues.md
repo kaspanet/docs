@@ -10,3 +10,4 @@ https://github.com/kaspanet/kaspad/issues/1691
 https://github.com/kaspanet/kaspad/issues/1651
 https://github.com/kaspanet/kaspad/issues/1517
 https://github.com/kaspanet/kaspad/issues/1325
+https://github.com/kaspanet/kaspad/issues/1812
