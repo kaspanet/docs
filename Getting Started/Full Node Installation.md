@@ -39,10 +39,10 @@ $ go install . ./cmd/...
 ## Getting Started
 
 Kaspad has several configuration options available to tweak how it runs, but all
-of the basic operations work with zero configuration (except the testnet flag).
+of the basic operations work with zero configuration except the `--utxoindex` flag (you can omit this flag if you don't use the wallet):
 
 ```bash
-$ kaspad --testnet
+$ kaspad --utxoindex
 ```
 
 ### Running a Miner (optional)
@@ -50,26 +50,32 @@ After running kaspad you can launch a miner and start mining blocks.
 
 To run a miner you need to create a keypair to mine into:
 ```bash
-$ kaspawallet create --testnet
+$ kaspawallet create
 ```
-You will be asked to choose a password for the wallet. After that you should run:
+
+You will be asked to choose a password for the wallet. After that you should run this command in order to start the wallet daemon:
 ```bash
-$ kaspawallet show-address --testnet
+$ kaspawallet start-daemon
+```
+
+And then run this in order to request an address from the wallet:
+```bash
+$ kaspawallet show-address
 ```
 
 Your screen will show you something like this:
 ```
 The wallet address is:
-kaspatest:0123456789abcdef0123456789abcdef0123456789
+kaspa:0123456789abcdef0123456789abcdef0123456789
 ```
 Copy the address and run kaspaminer with it:
 ```bash
-$ kaspaminer --testnet --miningaddr kaspatest:<YOUR_CREATED_ADDRESS>
+$ kaspaminer --miningaddr kaspa:<YOUR_CREATED_ADDRESS>
 ```
 
 ### Opening Ports
 
-It's not required in order to participate in the network, but it's recommended to configure your router to forward kaspad inbound port (16211 on testnet, unless configured otherwise)
+It's not required in order to participate in the network, but it's recommended to configure your router to forward kaspad inbound port (16111, unless configured otherwise)
 
 ### Hardware Requirements
 
