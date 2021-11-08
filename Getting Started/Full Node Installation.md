@@ -34,6 +34,20 @@ $ go install . ./cmd/...
 - Kaspad (and utilities) should now be installed in `$(go env GOPATH)/bin`. If you did
   not already add the bin directory to your system path during Go installation,
   you are encouraged to do so now.
+  
+#### Download Binaries
+
+The easiest way to use kaspad is to download the binaries from [here](https://github.com/kaspanet/kaspad/releases/latest). After downloading the binaries that fit your operating system, you should extract them to some folder.
+
+Notice that the rest of the tutorial assumes that you installed from source, so before each command you run you should first run: 
+```bash
+$ cd <THE_EXTRACTED_BINARIES_FOLDER>
+```
+
+and then should add `./` to any command so it'll run the corresponding binary. For example:
+```bash
+./kaspad --utxoindex
+```
 
 
 ## Getting Started
