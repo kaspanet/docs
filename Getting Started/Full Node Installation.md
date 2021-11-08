@@ -104,10 +104,6 @@ It's not required in order to participate in the network, but it's recommended t
 - 16 GB memory
 - 40 Mbit internet connection
 
-### Installation Using KDX
-
-See [this guide](/Getting%20Started/Desktop%20Installation.md) for installing the Kaspa desktop application.
-
 ### Discord
 
 You may want to join our discord server for further questions: [https://discord.gg/WmGhhzk](https://discord.gg/WmGhhzk)
