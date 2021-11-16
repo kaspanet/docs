@@ -6,11 +6,30 @@ Kaspad is a reference full node Kaspa implementation written in Go (golang).
 
 This project is currently under active development and is in a pre-Alpha state. Some things still don&#39;t work and APIs are far from finalized. The code is provided for reference only.
 
-## Requirements
+## Compilation Requirements
 
 Go 1.16 or later.
 
-## Installation
+## Setup
+
+Mining Kaspa requires two components: a node (kaspad), and a miner. A third component is required to create and maintain a wallet. The node listens for new blocks while the miner is searching for blocks to report to the node. All three components are provided as stand alone files which require no installation. 
+
+You need to either download precompiled binaries, or compile the codebase yourself. The first option is recommended for most users. 
+
+#### Download Binaries
+
+The easiest way to use kaspad is to download the binaries from [here](https://github.com/kaspanet/kaspad/releases/latest). After downloading the binaries that fit your operating system, you should extract them to some folder.
+
+Notice that the rest of the tutorial assumes that you installed from source, so before each command you run you should first run: 
+```bash
+$ cd <THE_EXTRACTED_BINARIES_FOLDER>
+```
+
+and then should add `./` to any command so it'll run the corresponding binary. For example:
+```bash
+./kaspad --utxoindex
+```
+
 
 #### Build from Source
 
@@ -34,21 +53,6 @@ $ go install . ./cmd/...
 - Kaspad (and utilities) should now be installed in `$(go env GOPATH)/bin`. If you did
   not already add the bin directory to your system path during Go installation,
   you are encouraged to do so now.
-  
-#### Download Binaries
-
-The easiest way to use kaspad is to download the binaries from [here](https://github.com/kaspanet/kaspad/releases/latest). After downloading the binaries that fit your operating system, you should extract them to some folder.
-
-Notice that the rest of the tutorial assumes that you installed from source, so before each command you run you should first run: 
-```bash
-$ cd <THE_EXTRACTED_BINARIES_FOLDER>
-```
-
-and then should add `./` to any command so it'll run the corresponding binary. For example:
-```bash
-./kaspad --utxoindex
-```
-
 
 ## Getting Started
 
@@ -59,8 +63,7 @@ of the basic operations work with zero configuration except the `--utxoindex` fl
 $ kaspad --utxoindex
 ```
 
-### Running a Miner (optional)
-After running kaspad you can launch a miner and start mining blocks.
+### Creating a Wallat (optional)
 
 To run a miner you need to create a keypair to mine into:
 ```bash
@@ -81,17 +84,31 @@ Your screen will show you something like this:
 ```
 The wallet address is:
 kaspa:0123456789abcdef0123456789abcdef0123456789
+
+### Running a miner (optional)
+
 ```
-Copy the address and run kaspaminer with it:
+After having created a wallet, copy the address and run kaspaminer with it:
 ```bash
 $ kaspaminer --miningaddr kaspa:<YOUR_CREATED_ADDRESS>
 ```
+
+Note that the miner is single threaded, so it is best to run several instances of it to utilize more than one CPU core.
+
+### Mining on Additional Computers
+Not all machines need to run kaspad. Once you have a running node, any other machine can report their blocks to it by using the ```-s``` flag:
+
+```bash
+$ kaspaminer -s <node IP address> --miningaddr kaspa:<YOUR_CREATED_ADDRESS>
+```
+
+You can run ```ifconfig``` in Linux or Mac or ```ipconfig``` in Windows on the machine running kaspad to find out its IP address.
 
 ### Opening Ports
 
 It's not required in order to participate in the network, but it's recommended to configure your router to forward kaspad inbound port (16111, unless configured otherwise)
 
-### Hardware Requirements
+### Kaspad Hardware Requirements
 
 **Minimum:**
 - 100 GB disk space
