@@ -89,6 +89,10 @@ Your screen will show you something like this:
 The wallet address is:
 kaspa:0123456789abcdef0123456789abcdef0123456789
 
+**Note**: Every time you ask kaspawallet for an address you will get a different address. This is perfectly fine. Every secret key is associated with many different public addresses and there is no reason not to use a fresh one for each transaction.
+
+At this point your can close the wallet daemon, though you should keep it running of you want to be able to check your balance and make transactions
+
 ### Running a miner (optional)
 
 **Note**: Our miner was highly superceded by Elichai's miner (see below), we recommend that you use that miner instead.
