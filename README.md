@@ -9,7 +9,6 @@ This repository contains documentation about Kaspa. The documentation is a work 
 ## Table of Contents
 
 1. [Getting Started](/Getting%20Started/README.md)
-    * [Desktop Installation](Getting%20Started/Desktop%20Installation.md)
     * [Full Node Installation](Getting%20Started/Full%20Node%20Installation.md)
     * [Wallet](Getting%20Started/Wallet.md)
 2. [About Kaspa](/About%20Kaspa/README.md)
