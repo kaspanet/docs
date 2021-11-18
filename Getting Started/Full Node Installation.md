@@ -88,6 +88,7 @@ Your screen will show you something like this:
 ```
 The wallet address is:
 kaspa:0123456789abcdef0123456789abcdef0123456789
+'''
 
 **Note**: Every time you ask kaspawallet for an address you will get a different address. This is perfectly fine. Every secret key is associated with many different public addresses and there is no reason not to use a fresh one for each transaction.
 
