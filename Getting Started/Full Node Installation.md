@@ -98,7 +98,6 @@ At this point your can close the wallet daemon, though you should keep it runnin
 
 **Note**: Our miner was highly superceded by Elichai's miner (see below), we recommend that you use that miner instead.
 
-```
 After having created a wallet, copy the address and run kaspaminer with it:
 ```bash
 $ kaspaminer --miningaddr kaspa:<YOUR_CREATED_ADDRESS>
