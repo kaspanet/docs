@@ -4,8 +4,6 @@
 
 Kaspad is a reference full node Kaspa implementation written in Go (golang).
 
-This project is currently under active development and is in a pre-Alpha state. Some things still don&#39;t work and APIs are far from finalized. The code is provided for reference only.
-
 ## Compilation Requirements
 
 Go 1.16 or later.
@@ -16,7 +14,7 @@ Mining Kaspa requires two components: a node (kaspad), and a miner. A third comp
 
 You need to either download precompiled binaries, or compile the codebase yourself. The first option is recommended for most users.
 
-Note that all three components must be running in parallel. That is, each should be running from a different console and should not be distured as long as mining takes place.
+Note that all kaspad and the miner must be running in parallel. That is, each should be running from a different console and should not be distured as long as mining takes place.
 
 #### Download Binaries
 
@@ -27,7 +25,7 @@ Notice that the rest of the tutorial assumes that you installed from source, so 
 $ cd <THE_EXTRACTED_BINARIES_FOLDER>
 ```
 
-and then should add `./` to any command so it'll run the corresponding binary. For example:
+Linux and Mac users might need to add `./` to any command so it'll run the corresponding binary. For example:
 ```bash
 ./kaspad --utxoindex
 ```
@@ -64,6 +62,8 @@ of the basic operations work with zero configuration except the `--utxoindex` fl
 ```bash
 $ kaspad --utxoindex
 ```
+
+You can invoke ```kaspad --help``` to get a list of more running flags.
 
 The first time you run kaspad it will retrieve peer information from Kaspa's DNS server and will start synchronizing with the network. First synchronization may take up to several hours (depending on your CPU strength and bandwidth). It is impossible to mine before the network is synced. Every time you run kaspad it will incrementally sync any blocks accumulated while it was offline, this is typically a much shorter process (as long as kaspad was not shut down for more than several hours).
 
@@ -103,7 +103,7 @@ After having created a wallet, copy the address and run kaspaminer with it:
 $ kaspaminer --miningaddr kaspa:<YOUR_CREATED_ADDRESS>
 ```
 
-**Note:** that the miner is single threaded, so it is best to run several instances of it to utilize more than one CPU core.
+**Note:** The miner is single threaded, so it is best to run several instances of it to utilize more than one CPU core.
 **Note:** Mining cannot start before the network is syncrhonized. In order to conserve your CPU, the miner will not start mining before the node is synced. Hence, it is expected to see a mining rate of 0 Hashes/second for a while as kaspad obtains the current network state.
 
 ### Mining on Additional Computers
@@ -119,7 +119,7 @@ You can run ```ifconfig``` in Linux or Mac or ```ipconfig``` in Windows on the m
 
 Available here: https://github.com/elichai/kaspa-miner/releases/latest
 
-Elichai's miner is an efficient miner which outperforms the native minor by about an order of magnitude. The syntax is largely the same only the ```--miningaddr``` flag has been renamed to ```--mining-address``` and the ```-s``` flag has been replaced with ```--kaspad-address```.
+Elichai's miner is an efficient miner written in Rust which outperforms the native minor by about an order of magnitude. The syntax is largely the same only the ```--miningaddr``` flag has been renamed to ```--mining-address``` and the ```-s``` flag has been replaced with ```--kaspad-address```.
 
 A typical invocation of the miner might look like
 
@@ -129,11 +129,11 @@ $ kaspa-miner-v0.1.0-win64-amd64 --kaspad-address <address> --mining-address <wa
 
 Like in the native miner, when running the miner from the same machine running kaspad, the ```--kaspad-address``` flag may be omitted.
 
-**Note:** Elichai's miner is multi threaded, so it is **not needed** to run several instances. By default, it will run one thread per core. If you want to run it on less cores, this could be adjusted by the ```--threads``` flag
+**Note:** Elichai's miner is multi threaded, so it is **not needed** to run several instances. By default, it will run one thread per core. If you want to run it on less cores, this could be adjusted with the ```--threads``` flag
 
-**Note:** Unlike the native miner, Elichai's miner is mining regardless of the sync status of kaspad, in which case it will find an invalid block. If you get the error ```"Block not submitted = IBD is running"``` this simply means the node is out of sync, either because the initial sync has not finished yet or because it fell out of sync momentarily.
+**Note:** Unlike the native miner, Elichai's miner is churning blocks regardless of the sync status of kaspad. Any blocks discovered while the network is out of sync will not be accepted. If you get the error ```"Block not submitted - IBD is running"``` this simply means the node is out of sync, either because the initial sync has not finished yet or because it fell out of sync momentarily.
 
-**Note for Windows users:** Elichai's binary is unsigned, which means that it is automatically blocked by Windows defender in system where it is available. In order to run it, you might have to manually add an exclusion. **DO NOT TURN OFF WINDOWS DEFENDER COMPLETELY TO RUN THE MINER**. 
+**Note for Windows users:** Elichai's binary is unsigned, which means that it is automatically blocked by Windows defender in some systems. In order to run it, you might have to manually add an exclusion. **DO NOT TURN OFF WINDOWS DEFENDER COMPLETELY JUST TO RUN THE MINER!**
 
 **Note for Linux/Mac users:** Sometimes the system does not recognize the miner file as an executable. This results in a ```permission denied``` error when trying to invoke the miner. This could be fixed by issuing the command ```chmod +x <file name>```.
 
