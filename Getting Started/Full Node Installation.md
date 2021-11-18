@@ -67,14 +67,14 @@ You can invoke ```kaspad --help``` to get a list of more running flags.
 
 The first time you run kaspad it will retrieve peer information from Kaspa's DNS server and will start synchronizing with the network. First synchronization may take up to several hours (depending on your CPU strength and bandwidth). It is impossible to mine before the network is synced. Every time you run kaspad it will incrementally sync any blocks accumulated while it was offline, this is typically a much shorter process (as long as kaspad was not shut down for more than several hours).
 
-### Creating a Wallat (optional)
+### Creating a Wallet (optional)
 
 To run a miner you need to create a keypair to mine into:
 ```bash
 $ kaspawallet create
 ```
 
-You will be asked to choose a password for the wallet. After that you should run this command in order to start the wallet daemon:
+You will be asked to choose a password for the wallet (a password must be at least 8 characters long, and it won't be shown on the screen you as you entering it). After that you should run this command in order to start the wallet daemon:
 ```bash
 $ kaspawallet start-daemon
 ```
@@ -124,12 +124,12 @@ Elichai's miner is an efficient miner written in Rust which outperforms the nati
 A typical invocation of the miner might look like
 
 ```bash
-$ kaspa-miner-v0.1.0-win64-amd64 --kaspad-address <address> --mining-address <wallet address>
+$ kaspa-miner-v0.1.0-win64-amd64 --kaspad-address <node IP address> --mining-address <wallet address>
 ```
 
 Like in the native miner, when running the miner from the same machine running kaspad, the ```--kaspad-address``` flag may be omitted.
 
-**Note:** Elichai's miner is multi threaded, so it is **not needed** to run several instances. By default, it will run one thread per core. If you want to run it on less cores, this could be adjusted with the ```--threads``` flag
+**Note:** Elichai's miner is multi threaded, so it is **not needed** to run several instances. By default, it will run one thread per physical/logical core (but not a virtual one, aka HyperThreading/SMT core). If you want to run it on more or less cores, this could be adjusted with the ```--threads``` flag
 
 **Note:** Unlike the native miner, Elichai's miner is churning blocks regardless of the sync status of kaspad. Any blocks discovered while the network is out of sync will not be accepted. If you get the error ```"Block not submitted - IBD is running"``` this simply means the node is out of sync, either because the initial sync has not finished yet or because it fell out of sync momentarily.
 
