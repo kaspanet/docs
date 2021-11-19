@@ -119,7 +119,7 @@ You can run ```ifconfig``` in Linux or Mac or ```ipconfig``` in Windows on the m
 
 Available here: https://github.com/elichai/kaspa-miner/releases/latest
 
-Elichai's miner is an efficient miner written in Rust which outperforms the native minor by about an order of magnitude. The syntax is largely the same only the ```--miningaddr``` flag has been renamed to ```--mining-address``` and the ```-s``` flag has been replaced with ```--kaspad-address```.
+Elichai's miner is an efficient miner written in Rust which outperforms the native miner by about an order of magnitude. The syntax is largely the same only the ```--miningaddr``` flag has been renamed to ```--mining-address``` and the ```-s``` flag has been replaced with ```--kaspad-address```.
 
 A typical invocation of the miner might look like
 
