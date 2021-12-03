@@ -6,7 +6,7 @@ Kaspad is a reference full node Kaspa implementation written in Go (golang).
 
 ## Compilation Requirements
 
-Go 1.16 or later.
+If you wish to compile the binaries yourself (most chances are that you don't), you would need Go 1.16 or later.
 
 ## Setup
 
