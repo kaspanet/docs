@@ -81,7 +81,7 @@ $ kaspawallet start-daemon
 
 And then run this in order to request an address from the wallet:
 ```bash
-$ kaspawallet show-address
+$ kaspawallet new-address
 ```
 
 Your screen will show you something like this:
