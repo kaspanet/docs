@@ -137,6 +137,11 @@ Like in the native miner, when running the miner from the same machine running k
 
 **Note for Linux/Mac users:** Sometimes the system does not recognize the miner file as an executable. This results in a ```permission denied``` error when trying to invoke the miner. This could be fixed by issuing the command ```chmod +x <file name>```.
 
+### GPU Miner
+
+A community developed GPU miner with CUDA support is available here: https://github.com/elichai/kaspa-miner/releases/latest.
+To date there is no openCL based miner.
+
 ### Opening Ports
 
 By forwarding port 16111 (unless configured otherwise) to the machine running kaspad, your node becomes a public node which other members of the network can use to sync. Even though private nodes can still mine, it is encouraged that you make your node public for the general health of the network. Like any other decentralized systems, Kaspa works best when there are many public nodes.
