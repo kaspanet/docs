@@ -140,7 +140,7 @@ Like in the native miner, when running the miner from the same machine running k
 ### GPU Miner
 
 A community developed GPU miner with CUDA support is available here: https://github.com/elichai/kaspa-miner/releases/latest.
-To date there is no openCL based miner.
+The GPU miner now supports openCL and AMD GPUs as well.
 
 ### Opening Ports
 
