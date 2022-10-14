@@ -16,6 +16,7 @@ A block chain, as opposed to a block DAG, makes coinbase transactions relatively
 A block chain block creates a transaction that pays a set, verifiable amount of money to itself. When creating such a transaction, the miner does not have to take into account any block but the mined block itself.
 
 Under GHOSTDAG, however, this is problematic:
+* Parallel blocks could contain conflicting transaction, and the miner who should get the fee for the transaction can not be determined before the blocks containing it are ordered by a merging block.
 * Miners must be discouraged from mining red blocks.
 * Transactions that happen to have been mined in a red block should NOT be penalized, and must be included in the DAG.
 * The hash power that went into mining a red block should not be void. Instead, the Block Rewards and Transaction Fees must be diverted elsewhere.
