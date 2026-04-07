@@ -1,0 +1,384 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+:root {
+  --font-sans:
+    var(--font-open-sans), 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-source-code-pro), 'Source Code Pro', ui-monospace, monospace;
+
+  --kaspa-docs-sidebar-width: 18.75rem;
+  --kaspa-docs-content-width: 54rem;
+  --kaspa-docs-links: #20609f;
+  --kaspa-docs-menu-bg: #ffffff;
+  --kaspa-docs-quote-bg: hsl(197 37% 96%);
+  --kaspa-docs-quote-border: hsl(197 37% 91%);
+  --kaspa-docs-alert-note: #0969da;
+  --kaspa-docs-alert-tip: #008000;
+  --kaspa-docs-alert-important: #8250df;
+  --kaspa-docs-alert-warning: #9a6700;
+  --kaspa-docs-alert-caution: #b52731;
+
+  --color-fd-background: #ffffff;
+  --color-fd-foreground: #242936;
+  --color-fd-muted: #fafafa;
+  --color-fd-muted-foreground: #5c6773;
+  --color-fd-popover: #ffffff;
+  --color-fd-popover-foreground: #242936;
+  --color-fd-card: #fafafa;
+  --color-fd-card-foreground: #242936;
+  --color-fd-border: rgba(36, 41, 54, 0.12);
+  --color-fd-primary: #20609f;
+  --color-fd-primary-foreground: #f8fafc;
+  --color-fd-secondary: #f4f4f4;
+  --color-fd-secondary-foreground: #242936;
+  --color-fd-accent: rgba(32, 96, 159, 0.1);
+  --color-fd-accent-foreground: #242936;
+  --color-fd-ring: #20609f;
+  --color-fd-overlay: rgba(200, 200, 205, 0.4);
+}
+
+.dark {
+  --kaspa-docs-links: #0096cf;
+  --kaspa-docs-menu-bg: hsl(210 25% 8%);
+  --kaspa-docs-quote-bg: hsl(226 15% 17%);
+  --kaspa-docs-quote-border: hsl(226 15% 22%);
+  --kaspa-docs-alert-note: #74b9ff;
+  --kaspa-docs-alert-tip: #09ca09;
+  --kaspa-docs-alert-important: #d3abff;
+  --kaspa-docs-alert-warning: #f0b72f;
+  --kaspa-docs-alert-caution: #f21424;
+
+  --color-fd-background: hsl(210 25% 8%);
+  --color-fd-foreground: #c5c5c5;
+  --color-fd-muted: #14191f;
+  --color-fd-muted-foreground: #8f9aa7;
+  --color-fd-popover: #14191f;
+  --color-fd-popover-foreground: #c5c5c5;
+  --color-fd-card: #14191f;
+  --color-fd-card-foreground: #d2d6dc;
+  --color-fd-border: rgba(92, 103, 115, 0.32);
+  --color-fd-primary: #ffb454;
+  --color-fd-primary-foreground: #332208;
+  --color-fd-secondary: #1b222c;
+  --color-fd-secondary-foreground: #c5c5c5;
+  --color-fd-accent: rgba(92, 103, 115, 0.22);
+  --color-fd-accent-foreground: #f3f4f6;
+  --color-fd-ring: #ffb454;
+  --color-fd-overlay: rgba(33, 40, 48, 0.4);
+}
+
+html {
+  scrollbar-color: color-mix(
+      in srgb,
+      var(--color-fd-muted-foreground) 60%,
+      transparent
+    )
+    transparent;
+}
+
+body {
+  background: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-fd-primary) 24%, transparent);
+}
+
+.kaspa-docs-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.075rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.kaspa-docs-brand__logo {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+#nd-notebook-layout {
+  --fd-layout-width: 100%;
+}
+
+@media (min-width: 48rem) {
+  #nd-notebook-layout {
+    --fd-sidebar-width: var(--kaspa-docs-sidebar-width);
+  }
+}
+
+#nd-subnav {
+  z-index: 40;
+  background: var(--kaspa-docs-menu-bg);
+  box-shadow: none;
+}
+
+#nd-subnav[data-transparent='true'] {
+  background: var(--kaspa-docs-menu-bg);
+}
+
+#nd-subnav [data-header-body] {
+  gap: 0.875rem;
+  min-height: 3.125rem;
+  padding-inline: clamp(1rem, 2vw, 1.5rem);
+  border-block-end-color: var(--color-fd-border);
+}
+
+#nd-subnav [data-header-body] > div:first-child > a {
+  text-decoration: none;
+  color: var(--color-fd-foreground);
+}
+
+#nd-subnav [data-search-full] {
+  min-width: 13rem;
+  max-width: min(17rem, 28vw);
+  border-radius: 0.35rem;
+  border-color: var(--color-fd-border);
+  background: var(--color-fd-secondary);
+  box-shadow: none;
+}
+
+#nd-subnav [data-search-full] kbd {
+  border-color: var(--color-fd-border);
+  background: var(--color-fd-background);
+  box-shadow: none;
+}
+
+#nd-subnav [data-theme-toggle] {
+  border-color: var(--color-fd-border);
+  background: var(--color-fd-secondary);
+}
+
+#nd-subnav [aria-label='GitHub'],
+#nd-subnav [data-search],
+#nd-subnav [data-theme-toggle] button {
+  color: var(--color-fd-muted-foreground);
+}
+
+#nd-sidebar,
+#nd-sidebar-mobile {
+  background: var(--color-fd-card);
+  color: var(--color-fd-foreground);
+}
+
+#nd-sidebar {
+  border-inline-end-color: var(--color-fd-border);
+  box-shadow: none;
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted: #14191f;
+  --color-fd-secondary: #1b222c;
+  --color-fd-muted-foreground: #c8c9db;
+}
+
+#nd-sidebar a,
+#nd-sidebar button {
+  border-radius: 0.35rem;
+}
+
+#nd-sidebar a[data-active='true'],
+#nd-sidebar button[data-active='true'] {
+  background: transparent;
+  color: var(--color-fd-primary);
+}
+
+#nd-sidebar a:hover,
+#nd-sidebar button:hover {
+  background: transparent;
+  color: var(--color-fd-primary);
+}
+
+#nd-sidebar .border-t,
+#nd-sidebar-mobile .border-t {
+  border-top-color: var(--color-fd-border);
+}
+
+#nd-page {
+  width: 100%;
+  gap: 0.875rem;
+  padding-block: 2rem 3rem;
+}
+
+#nd-page > * {
+  width: 100%;
+  max-width: var(--kaspa-docs-content-width);
+  margin-inline: auto;
+}
+
+#nd-page[data-full='true'] > * {
+  max-width: min(80rem, 100%);
+}
+
+.kaspa-docs-article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.kaspa-docs-article > h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 2.7rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.kaspa-docs-article > p {
+  margin: 0;
+  color: var(--color-fd-muted-foreground);
+  font-size: 1.15rem;
+  line-height: 1.65;
+}
+
+.kaspa-docs-article > .prose {
+  margin-top: 0.75rem;
+}
+
+#nd-page > :last-child:not(.prose) {
+  margin-top: 1.5rem;
+}
+
+#nd-page > :last-child:not(.prose) a {
+  border-color: var(--color-fd-border);
+  background: var(--color-fd-card);
+  box-shadow: none;
+}
+
+#nd-page > :last-child:not(.prose) a:hover {
+  background: var(--color-fd-secondary);
+}
+
+.prose {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.prose a:not([data-card]) {
+  color: var(--kaspa-docs-links);
+  text-decoration: none;
+}
+
+.prose a:not([data-card]):hover {
+  text-decoration: underline;
+}
+
+.prose h2 {
+  margin-top: 2.25em;
+  margin-bottom: 0.8em;
+  font-size: 1.65em;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.prose h3 {
+  margin-top: 1.75em;
+  margin-bottom: 0.55em;
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+.prose [data-card] h3 {
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+}
+
+.prose code:not(pre code) {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--color-fd-primary) 8%, transparent);
+  color: var(--color-fd-primary);
+}
+
+.dark .prose code:not(pre code) {
+  background: rgba(255, 180, 84, 0.08);
+}
+
+.shiki:not(.not-fumadocs-codeblock *) {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0.5rem;
+  box-shadow: none;
+}
+
+.prose blockquote:not(.github-alert) {
+  margin: 1.5rem 0;
+  padding: 0.9rem 1.25rem;
+  border-inline-start: none;
+  border-block: 1px solid var(--kaspa-docs-quote-border);
+  background: var(--kaspa-docs-quote-bg);
+  color: var(--color-fd-foreground);
+  font-style: normal;
+}
+
+.prose blockquote:not(.github-alert) p:first-of-type::before,
+.prose blockquote:not(.github-alert) p:last-of-type::after {
+  content: none;
+}
+
+.github-alert {
+  --github-alert-accent: var(--kaspa-docs-alert-note);
+}
+
+.github-alert-note {
+  --github-alert-accent: var(--kaspa-docs-alert-note);
+}
+
+.github-alert-tip {
+  --github-alert-accent: var(--kaspa-docs-alert-tip);
+}
+
+.github-alert-important {
+  --github-alert-accent: var(--kaspa-docs-alert-important);
+}
+
+.github-alert-warning {
+  --github-alert-accent: var(--kaspa-docs-alert-warning);
+}
+
+.github-alert-caution {
+  --github-alert-accent: var(--kaspa-docs-alert-caution);
+}
+
+.prose blockquote.github-alert {
+  margin: 1.5rem 0;
+  padding: 0.125rem 0 0.125rem 1.15rem;
+  border: none;
+  border-inline-start: 4px solid var(--github-alert-accent);
+  background: transparent;
+  color: inherit;
+  font-style: normal;
+}
+
+.prose blockquote.github-alert p:first-of-type::before,
+.prose blockquote.github-alert p:last-of-type::after {
+  content: none;
+}
+
+.github-alert__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.45rem;
+  color: var(--github-alert-accent);
+  font-weight: 600;
+}
+
+.github-alert__icon {
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex-shrink: 0;
+}
+
+.github-alert__body > :first-child {
+  margin-top: 0;
+}
+
+.github-alert__body > :last-child {
+  margin-bottom: 0;
+}
