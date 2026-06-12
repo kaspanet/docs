@@ -1,44 +1,41 @@
 # Kaspa Docs
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+Source for the Kaspa documentation site - guides for integrating with Kaspa (SDK setup, wallets, transactions, running a node) and documentation of upcoming programmability features.
 
-Run development server:
+The site is a [Next.js](https://nextjs.org) app built with [Fumadocs](https://fumadocs.dev). Content is written in MDX.
+
+## Repository layout
+
+| Path            | Description                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| `content/docs/` | The documentation pages (MDX). This is where most contributions land.                    |
+| `examples/`     | Runnable code examples (Node.js, browser, Rust, Java) backing the integration guides.    |
+| `app/`          | Next.js app routes and layout.                                                           |
+| `components/`   | React components used by the site and MDX content.                                       |
+| `lib/`          | Content source adapter and shared layout options.                                        |
+| `legacy/`       | The previous markdown-only documentation, kept for reference. Not published on the site. |
+| `Reference/`    | Research material (papers, LaTeX sources). Not published on the site.                    |
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-pnpm dev
-# or
-yarn dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open http://localhost:3000 to see the site.
 
-## Explore
+## Checks
 
-In the project, you can see:
+CI runs these on every pull request - run them locally before pushing:
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+```bash
+npm run lint
+npm run format:check
+npm run types:check
+npm run build
+```
 
-| Route                     | Description                                          |
-| ------------------------- | ---------------------------------------------------- |
-| `app/[[...slug]]`         | The documentation layout and pages at the site root. |
-| `app/api/search/route.ts` | The Route Handler for search.                        |
+## Contributing
 
-### Fumadocs MDX
-
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
-
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
-
-## Learn More
-
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+Contributions are welcome - see [CONTRIBUTING.md](CONTRIBUTING.md). Missing documentation is tracked in the [issues](https://github.com/kaspanet/docs/issues).
