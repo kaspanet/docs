@@ -1,6 +1,6 @@
 # Kaspa Docs
 
-Source for the Kaspa documentation site - guides for integrating with Kaspa (SDK setup, wallets, transactions, running a node) and documentation of upcoming programmability features.
+Source for the Kaspa documentation site - guides for integrating with and building on Kaspa.
 
 The site is a [Next.js](https://nextjs.org) app built with [Fumadocs](https://fumadocs.dev). Content is written in MDX.
 

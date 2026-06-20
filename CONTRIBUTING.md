@@ -4,12 +4,21 @@ Thanks for helping improve the Kaspa documentation. Contributions of all sizes a
 
 ## Finding something to work on
 
-- The [open issues](https://github.com/kaspanet/docs/issues) track missing and desired documentation.
-- If you want to write about something that has no issue yet, open one first so the scope can be discussed.
+The [open issues](https://github.com/kaspanet/docs/issues) track missing and desired documentation, and are a good place to start.
+
+- Small changes (typo fixes, clarifications, broken links) can be sent as a pull request directly - no issue needed.
+- For larger changes, it's worth opening an issue first so the scope can be discussed. You can still PR directly, but there's more risk of it not being merged if it turns out to be out of scope.
 
 ## Making changes
 
-1. Fork the repository and create a branch.
+1. [Fork the repository](https://github.com/kaspanet/docs/fork), then clone your fork and create a branch ([install Git](https://git-scm.com/downloads) if you don't have it):
+
+   ```bash
+   git clone https://github.com/<your-username>/docs.git
+   cd docs
+   git switch -c my-change
+   ```
+
 2. Documentation pages live in `content/docs/` as MDX files. Each section has a `meta.json` that controls page ordering and titles in the sidebar - add new pages there.
 3. Code examples that accompany guides live in `examples/`. If a guide shows code, prefer keeping a matching runnable example there so it can be tested.
 4. Preview your changes locally:
