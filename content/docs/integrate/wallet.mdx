@@ -3,14 +3,14 @@ title: Wallet
 description: Create or open wallets, manage accounts, and send transactions with the Wallet API in JavaScript or Rust.
 ---
 
-For JavaScript and Rust, the recommended entrypoint is the high-level Wallet API. Python currently stays on the lower-level RPC path.
+For JavaScript, Rust, and Python, the recommended entrypoint is the high-level Wallet API.
 
 > [!NOTE]
 > Full runnable examples for this guide live in [`/examples`](https://github.com/kaspanet/docs/tree/main/examples).
 
 ## Runtime model
 
-- Native Rust and Node.js store wallet data on the local filesystem.
+- Native Rust, Node.js, and Python store wallet data on the local filesystem.
 - Browser builds store wallet data in `localStorage` and transaction records in `IndexedDB`.
 - `resident: true` creates a memory-only wallet that is not persisted.
 
@@ -161,7 +161,53 @@ wallet.clone().disconnect().await?;
 wallet.clone().wallet_close().await?;
 ```
 
+## Python
+
+```py
+# ...
+wallet = Wallet(
+    network_id="mainnet",
+    resolver=Resolver(),
+)
+
+try:
+    # optionally replace with upsert: check existance - create if not existing else open
+    await wallet.wallet_open(
+        wallet_secret=wallet_secret,
+        account_descriptors=False,
+        filename=filename,
+    )
+
+    await wallet.accounts_ensure_default(
+        wallet_secret=wallet_secret,
+        account_kind=AccountKind("bip32"),
+    )
+
+    # optional: wallet.add_event_listener(...)
+
+    await wallet.connect(block_async_connect=True)
+    await wallet.start()
+
+    accounts = await wallet.accounts_enumerate()
+    account = accounts[0]
+
+    await wallet.accounts_activate(account_ids=[account.account_id])
+
+    await wallet.accounts_send(
+        account_id=account.account_id,
+        wallet_secret=wallet_secret,
+        destination=[PaymentOutput(recipient, kaspa_to_sompi(1))],
+        priority_fee_sompi=Fees(0, FeeSource.SenderPays),
+        # payload=...,
+    )
+finally:
+    await wallet.stop()
+    await wallet.disconnect()
+    await wallet.wallet_close()
+```
+
 ## More Complete Examples
 
 - [JavaScript wallet examples](https://github.com/kaspanet/rusty-kaspa/tree/master/wasm/examples/nodejs/javascript/wallet)
 - [RK CLI Wallet](https://github.com/kaspanet/rusty-kaspa/tree/master/cli)
+- [Python wallet examples](https://github.com/kaspanet/kaspa-python-sdk/tree/main/examples/wallet)
