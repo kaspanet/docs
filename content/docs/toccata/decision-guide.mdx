@@ -7,7 +7,7 @@ Do not start with "is this app complex?"
 
 Complexity is not the axis. Shared state is.
 
-Ask the awkward question first:
+Ask the state-shape question first:
 
 ```text
 Can the app be expressed as many live UTXO state lanes,
@@ -55,7 +55,7 @@ With Toccata, L1 covenants can:
 - merge through leader/delegate transitions;
 - use inline ZK for private or expensive local predicates.
 
-Kaspa's 10 BPS target matters here. If an app can partition its state, the DAG gives those lanes room to move. A covenant family that would feel cramped on a slower chain may be practical here.
+Kaspa's 10 BPS target matters here. If an app can partition its state, the DAG gives those lanes room to move. A covenant family that would bottleneck on a slower chain may be practical here.
 
 Start with covenants when:
 
@@ -69,7 +69,7 @@ Start with covenants when:
 
 ## Where Covenants Bite
 
-Covenants get hard when the app secretly wants shared mutable state.
+Covenants get hard when the app's core invariant is shared mutable state.
 
 Watch for:
 

@@ -256,8 +256,8 @@ The payload appears in two different hash worlds. The v1 txid uses the BLAKE3 `P
 ## Builder Traps
 
 - If you use v0 txid logic for v1, every downstream proof and index will point at the wrong thing.
-- If you expect signatures to freeze `compute_budget`, your transaction builder will fight the design.
-- If you attach a covenant binding but the successor script never validates covenant state, you created a label, not a protocol.
+- If you expect signatures to freeze `compute_budget`, budget adjustment will fail for the wrong reason.
+- If you attach a covenant binding but the successor script never validates covenant state, the binding is lineage metadata, not transition validation.
 - If you treat user lanes like account-chain shards, you will miss the based-app model: they are L1 transaction lanes for ordering and proof anchoring.
 - If two hashes disagree, first ask which projection you are looking at: txid, `tx::hash`, or sighash.
 

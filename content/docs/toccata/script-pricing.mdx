@@ -3,9 +3,9 @@ title: Script Pricing
 description: "How Toccata turns compute budgets into script-unit limits, and why transactions fail when the budget is wrong."
 ---
 
-Script pricing is where a beautiful covenant either runs or dies.
+Script pricing is where a covenant's transition policy meets validation resources.
 
-The script engine does not care that the transaction looked structurally valid. If the active input runs out of committed execution room, validation fails.
+The transaction can be structurally valid and still fail script execution. If the active input runs out of committed execution room, validation fails.
 
 ```text
 spent input -> compute_budget -> script-unit limit -> script execution
