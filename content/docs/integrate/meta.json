@@ -1,5 +1,6 @@
 {
   "title": "Integrate",
+  "description": "Guides for connecting to Kaspa nodes, building wallet flows, reading accepted transactions, carrying payloads, and running infrastructure.",
   "pages": [
     "getting-started",
     "wallet",

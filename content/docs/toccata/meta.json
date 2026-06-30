@@ -1,5 +1,6 @@
 {
   "title": "Toccata",
+  "description": "Kaspa's programmability stack: covenants, transaction v1, script pricing, Silverscript, inline ZK, and based apps.",
   "pages": [
     "index",
     "covenant-state",
