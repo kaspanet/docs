@@ -1,0 +1,129 @@
+---
+title: Inline ZK
+description: "How a Toccata covenant can hide or compress one transition by verifying a proof directly in script."
+---
+
+Inline ZK is still a covenant.
+
+The covenant UTXO is spent. The script runs. The successor output is validated. The difference is that part of the transition happened elsewhere and arrives as a proof.
+
+```mermaid
+flowchart LR
+    classDef chain fill:#eef6ff,stroke:#4b82c3,color:#172033
+    classDef private fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
+    classDef script fill:#eef9ef,stroke:#4d9f5b,color:#132016
+
+    C0["covenant UTXO<br/>state_commitment_0"]:::chain
+    W["private witness<br/>state_0, state_1, secret inputs"]:::private
+    P["proof<br/>public: commitment_0, commitment_1"]:::private
+    S["script verifies proof<br/>and successor output"]:::script
+    C1["covenant UTXO<br/>state_commitment_1"]:::chain
+
+    C0 --> W --> P --> S --> C1
+```
+
+The L1 state can be a commitment instead of the full state. The transition function can run off-chain. The script only accepts the next UTXO if the proof binds the old commitment, the new commitment, and the exact program the covenant intended to use.
+
+## What the proof buys
+
+Without ZK, a covenant script has to execute the transition logic directly or inspect enough public data to validate it.
+
+With inline ZK, the script can say:
+
+```text
+I will not rerun the transition.
+I will verify that a specific proving program accepted it.
+I will bind the proof output to my successor covenant state.
+```
+
+This changes where the work happens. The public script can stay small while the private or expensive check lives in the proof system.
+
+It does not remove the covenant work. The script still has to validate the output it is creating.
+
+## `OpZkPrecompile`
+
+Toccata exposes proof verification through `OpZkPrecompile`.
+
+The precompile dispatches by tag:
+
+| Tag    | Proof system       | Shape                                                                        |
+| ------ | ------------------ | ---------------------------------------------------------------------------- |
+| `0x20` | Groth16            | compact BN254 proof, not post-quantum                                        |
+| `0x21` | RISC Zero Succinct | STARK-based RISC Zero receipt, larger, with post-quantum security properties |
+
+The script should treat a proof as meaningful only under the exact verification key, image id, public inputs, and state commitments it expects. A proof that is valid for the wrong program is not useful to the covenant.
+
+## The covenant still owns the output
+
+Inline ZK is a proof check inside the covenant loop.
+
+```text
+spend(proof, old_commitment, new_commitment, output_idx):
+    require(old_commitment == current_state_commitment)
+    require(zk_verify(program_id, proof, [old_commitment, new_commitment]))
+    require(output[output_idx].covenant_id == current_covenant_id)
+    require(output[output_idx].script_public_key == p2sh(contract, new_commitment))
+```
+
+The proof says the hidden transition is valid. The script says the transaction actually installs the proven next commitment.
+
+Those are different checks. You need both.
+
+```mermaid
+flowchart TB
+    classDef proof fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
+    classDef script fill:#eef9ef,stroke:#4d9f5b,color:#132016
+    classDef out fill:#fff7e8,stroke:#c58b2a,color:#1f1b12
+
+    P["proof<br/>old -> new is valid"]:::proof
+    S["script<br/>this tx creates new"]:::script
+    O["successor output<br/>same covenant_id, new P2SH"]:::out
+
+    P --> S --> O
+```
+
+## Where inline ZK fits
+
+Inline ZK fits when each action can settle on its own:
+
+- a private transfer covenant;
+- a vault whose unlock condition depends on private data;
+- a game or league covenant that checks a proprietary bot-detection predicate;
+- a bridge-like covenant that verifies an external-state proof;
+- a credential or membership predicate where the public chain should only see the accepted result.
+
+The state transition may be private, expensive, or both. The public L1 state can stay as a hash.
+
+## Where it stops fitting
+
+Inline ZK becomes awkward when the app really wants a shared off-chain runtime.
+
+Watch for these signs:
+
+- many users mutate one shared state root;
+- proofs should be batched over many user operations;
+- exits are derived from a span of activity, not one covenant action;
+- users should submit ordinary payload transactions instead of covenant spends;
+- the app needs lane-local L1 ordering.
+
+Those requirements move beyond "one covenant action, one proof." They point toward a based app.
+
+## Inline ZK and based apps
+
+Inline ZK and based apps share proof verification, but they use it at different scales.
+
+```mermaid
+flowchart LR
+    classDef inline fill:#eef9ef,stroke:#4d9f5b,color:#132016
+    classDef based fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
+
+    I["inline ZK<br/>one covenant spend<br/>one transition proof"]:::inline
+    B["based app<br/>many L1 user ops<br/>one settlement proof"]:::based
+
+    I --> IC["successor commitment"]
+    B --> BC["new app state root"]
+```
+
+Inline ZK is a local covenant technique. Based apps are an execution architecture.
+
+Continue with [Based Apps](./based-apps).
