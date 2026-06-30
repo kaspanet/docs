@@ -3,9 +3,9 @@ title: Covenant State
 description: "How Toccata covenants encode state, validate transitions, use covenant IDs, and scale from single contracts to multi-contract flows."
 ---
 
-Covenants are easiest to understand if you watch one UTXO move.
+Covenants are easiest to understand by following one UTXO through a spend.
 
-Suppose you want a counter. The policy is almost boring: only increase the number, and never increase it by more than `max_step`.
+Suppose you want a counter. The policy is simple: only increase the number, and never increase it by more than `max_step`.
 
 ```js
 pragma silverscript ^0.1.0;
@@ -76,7 +76,7 @@ The fourth step is the part older script systems struggle with. A covenant has t
 
 ## Why The Hash Keeps Changing
 
-The P2SH hash commits to both contract and state. That is exactly what you want for state validation, but it creates a naming problem.
+The P2SH hash commits to both contract and state. That supports state validation, but it creates a naming problem.
 
 ```mermaid
 flowchart LR
@@ -92,7 +92,7 @@ flowchart LR
 
 If the script hash is the covenant's only identity, the covenant changes its name every time its state changes.
 
-Bitcoin-style designs can work around this with parent or grandparent preimages. The idea is to make fake successors unspendable by requiring the next spender to prove a relationship to the previous transaction. That is clever, but it is heavy: recursive preimages become part of the protocol, witness data grows, and the chain still does not know that a family of changing script hashes is one covenant lineage.
+Bitcoin-style designs can work around this with parent or grandparent preimages. The idea is to make fake successors unspendable by requiring the next spender to prove a relationship to the previous transaction. That works, but it is heavy: recursive preimages become part of the protocol, witness data grows, and the chain still does not know that a family of changing script hashes is one covenant lineage.
 
 Toccata makes lineage explicit.
 
@@ -159,7 +159,7 @@ Toccata exposes both views.
 | outputs belonging to covenant `id` | `OpCovOutputCount(id)`, `OpCovOutputIdx(id, k)`        |
 | binding data on output `o`         | `OpOutputCovenantId(o)`, `OpOutputAuthorizingInput(o)` |
 
-Here is the shape this enables:
+This supports transactions like:
 
 ```mermaid
 flowchart TB
@@ -238,7 +238,7 @@ sequenceDiagram
     D2->>L: verify leader and shared covenant id
 ```
 
-This is a recurring Toccata pattern because it keeps the expensive reasoning in one place while preventing passive participants from being dragged into the wrong transition.
+This is a recurring Toccata pattern because it centralizes the expensive reasoning while preventing passive participants from being dragged into the wrong transition.
 
 ## Why High Frequency Matters
 

@@ -22,7 +22,7 @@ L1 orders the operation and makes it available. The app runtime executes it off-
 
 ## The Boring User Operation
 
-The user operation is deliberately boring at consensus level.
+The user operation is ordinary at consensus level.
 
 It is a v1 transaction with:
 
@@ -35,7 +35,7 @@ It is a v1 transaction with:
 
 The chain does not parse the app operation. The app runtime does.
 
-That split is the point. Kaspa L1 supplies ordering, data availability, and lane commitments. The app supplies execution semantics.
+This split assigns ordering, data availability, and lane commitments to Kaspa L1. The app supplies execution semantics.
 
 ## The Settlement Covenant
 
@@ -148,7 +148,7 @@ flowchart LR
     L1 --> EXEC --> TXP --> BP --> AP --> SET --> COV
 ```
 
-The important design choice is that proofs do not sit on the user-operation critical path. Execution can commit app state, while proof workers produce receipts, batches, aggregates, and settlement artifacts behind it.
+A useful runtime property is that proofs do not sit on the user-operation critical path. Execution can commit app state, while proof workers produce receipts, batches, aggregates, and settlement artifacts behind it.
 
 Current high-level patterns:
 
@@ -194,7 +194,7 @@ fn main() {
 }
 ```
 
-This toy guest increments each touched resource. The pattern matters more than the logic: the host feeds encoded inputs, the guest updates resources, and the journal becomes material for later proof composition.
+This minimal guest increments each touched resource. The pattern matters more than the logic: the host feeds encoded inputs, the guest updates resources, and the journal becomes material for later proof composition.
 
 ## Settlement Journal
 

@@ -9,7 +9,7 @@ The spending transaction has to carry the right body:
 
 - enough execution budget for the script to run;
 - outputs that can carry covenant lineage;
-- a lane and payload surface for based-app traffic;
+- lane and payload fields for based-app traffic;
 - hash contexts that separate identity, block commitment, and user signatures.
 
 That is transaction version 1.
@@ -128,7 +128,7 @@ The implementation uses version-aware encoding around one core transaction model
 - v0 outputs must not carry covenant bindings;
 - v1 outputs may carry `CovenantBinding`.
 
-The binding shape is small:
+The binding is small:
 
 ```rust
 CovenantBinding {
@@ -194,7 +194,7 @@ Equivalently, the only valid `[x, 0x00 * 19]` shapes are native and coinbase. Ot
 
 Only v1 user-lane transactions may carry non-zero `gas`. Native and reserved system shapes stay gas-free.
 
-For a based app, this means the user operation can be a boring L1 transaction:
+For a based app, this means the user operation can be an ordinary L1 transaction:
 
 ```text
 subnetwork_id = app lane
@@ -236,7 +236,7 @@ The split is not aesthetic. It keeps three jobs from stepping on each other:
 - **`tx::hash`** commits to the full encoded transaction for block-level commitments, including mass and v1 `compute_budget`.
 - **sighash** captures the spender's signed intent. In v1 it does not sign `compute_budget`, but it does sign covenant output bindings when those outputs are covered by the sighash type.
 
-The payload appears in two different hash worlds. The v1 txid uses the BLAKE3 `PayloadDigest`. The sighash uses the legacy signing payload hash path. Do not reuse one as the other.
+The payload appears in two different hash contexts. The v1 txid uses the BLAKE3 `PayloadDigest`. The sighash uses the legacy signing payload hash path. Do not reuse one as the other.
 
 ## Commitment Matrix
 
@@ -255,7 +255,7 @@ The payload appears in two different hash worlds. The v1 txid uses the BLAKE3 `P
 
 ## Builder Traps
 
-- If you use v0 txid logic for v1, every downstream proof and index will point at the wrong thing.
+- If you use v0 txid logic for v1, downstream proofs and indexes will point at the wrong transaction id.
 - If you expect signatures to freeze `compute_budget`, budget adjustment will fail for the wrong reason.
 - If you attach a covenant binding but the successor script never validates covenant state, the binding is lineage metadata, not transition validation.
 - If you treat user lanes like account-chain shards, you will miss the based-app model: they are L1 transaction lanes for ordering and proof anchoring.

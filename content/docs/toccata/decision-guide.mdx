@@ -37,7 +37,7 @@ flowchart TD
     B --> V["vprogs-style runtime<br/>proof settlement"]:::zk
 ```
 
-The diagram is not a law. It is a way to stop yourself from choosing infrastructure before you have chosen state shape.
+The diagram is a heuristic: choose the state shape before choosing infrastructure.
 
 ## Covenants Are Not The Toy Path
 
@@ -106,7 +106,7 @@ This can be real, but it is not a beginner pattern.
 
 Another idea is to bind a transaction input to a covenant id rather than a specific UTXO, using sighash patterns such as anyone-can-pay or signature-from-stack style constructions. A miner could resolve the exact UTXO while building a block template.
 
-That likely needs mempool and node support. Treat it as a research path or adventurous-team path, not the normal way to ship a first app.
+This likely needs mempool and node support. Treat it as a research path, not the normal way to ship a first app.
 
 ## Based Apps Are Not Bigger Covenants
 

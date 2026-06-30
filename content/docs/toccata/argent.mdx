@@ -5,7 +5,7 @@ description: "The experimental actor-style direction for writing multi-contract 
 
 Argent is not a third road beside covenants and based apps.
 
-It is a way to imagine the next layer above Silverscript: write a multi-contract covenant system as actors, roles, routes, and typed transitions; lower it into explicit Silverscript and then Kaspa script.
+It is a prototype for the next layer above Silverscript: write a multi-contract covenant system as actors, roles, routes, and typed transitions; lower it into explicit Silverscript and then Kaspa script.
 
 ```text
 Argent-shaped source -> generated Silverscript -> Kaspa script
@@ -18,7 +18,7 @@ The analogy is `async` lowering into a state machine. The developer writes the c
 
 ## The Problem It Points At
 
-Silverscript can express multi-contract covenant systems. The hard part is not expressiveness. The hard part is keeping the route plumbing correct.
+Silverscript can express multi-contract covenant systems. The difficult part is keeping the route plumbing correct.
 
 A contract family needs to know:
 
@@ -62,7 +62,7 @@ The output should still be ordinary covenant code. Argent's job is to make the f
 
 ## A Multi-Actor Flow
 
-The Stones shape is not one contract. It is a family.
+Stones is a contract family, not a single contract.
 
 ```mermaid
 flowchart TB

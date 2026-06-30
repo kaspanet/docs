@@ -3,7 +3,7 @@ title: Silverscript
 description: "The main authoring path for Toccata L1 covenants: state, introspection, macros, and generated transition checks."
 ---
 
-Writing raw covenant script is possible. It is also a good way to spend your week proving that a stack machine has opinions.
+Writing raw covenant script is possible. It also means debugging low-level stack behavior directly.
 
 Silverscript is the normal authoring path for Toccata covenants. You write the state and transition policy. The compiler handles low-level stack encoding, ABI shape, state validation helpers, and the repetitive covenant plumbing.
 
@@ -57,7 +57,7 @@ int in_count = OpCovInputCount(cov_id);
 int out_idx = OpAuthOutputIdx(this.activeInputIndex, 0);
 ```
 
-That is not just nicer syntax. It changes the review surface. Reviewers can ask "which outputs are validated?" rather than reverse-engineering raw stack choreography.
+This narrows the review surface. Reviewers can ask "which outputs are validated?" rather than reverse-engineering raw stack choreography.
 
 ## Covenant Macros
 
@@ -103,7 +103,7 @@ flowchart LR
     P --> M --> W --> V
 ```
 
-Generated covenant wrappers should be boring. Boring is good here. It means the same leader/delegate and output-validation patterns show up the same way across contracts.
+Generated covenant wrappers should be consistent. The same leader/delegate and output-validation patterns should appear the same way across contracts.
 
 ## Auth Binding And Cov Binding
 
@@ -211,7 +211,7 @@ if(prev_states[i].identifierType == IDENTIFIER_PUBKEY) {
 }
 ```
 
-That last branch is the one to sit with. A covenant can own something as a covenant, not only through a key. That is where UTXO-native composition starts to feel different from account-style composition.
+The covenant-id branch is the key point. A covenant can own something as a covenant, not only through a key. That is where UTXO-native composition differs from account-style composition.
 
 ## Tooling Shape
 

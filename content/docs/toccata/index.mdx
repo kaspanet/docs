@@ -3,11 +3,11 @@ title: Toccata Dev Guide
 description: "A builder guide to Kaspa's Toccata programmability stack: covenants, transaction v1, script pricing, inline ZK, based ZK apps, and Silverscript."
 ---
 
-Toccata is the point where Kaspa UTXOs become programmable enough to carry real application state.
+Toccata makes Kaspa UTXOs expressive enough to carry real application state.
 
 As of June 30, 2026, Toccata is active on mainnet. In `rusty-kaspa`, mainnet activation is configured at DAA score `474_165_565`.
 
-The easiest way into the stack is not to start with every opcode. Start with one stateful coin.
+Start with one stateful coin rather than an opcode list.
 
 ```js
 pragma silverscript ^0.1.0;
@@ -42,10 +42,10 @@ flowchart LR
 
 That is the core covenant move: compress, open, validate, recompress.
 
-Everything else in Toccata exists to make this move useful at production scale: transaction fields that bind covenant outputs, opcodes that let scripts inspect the transaction they are inside, consensus lineage for covenant families, pricing that meters expensive work, and proof hooks for applications that should not execute fully on L1.
+The rest of Toccata supports that loop at production scale: transaction fields that bind covenant outputs, opcodes that let scripts inspect the transaction they are inside, consensus lineage for covenant families, pricing that meters expensive work, and proof hooks for applications that should not execute fully on L1.
 
 > [!IMPORTANT]
-> The consensus features described here are mainnet features. The developer tooling is younger. Silverscript is the main covenant authoring path and is approaching the shape builders should expect, but release and audit status still matter. Argent and vprogs are earlier reference stacks. This book should be read as a living guide that will periodically catch up with the repos.
+> The consensus features described here are mainnet features. The developer tooling is younger. Silverscript is the main covenant authoring path and is approaching the shape builders should expect, but release and audit status still matter. Argent and vprogs are earlier reference stacks. Expect periodic guide updates as those repos move.
 
 ## What Toccata Adds
 
@@ -97,7 +97,7 @@ Use L1 covenants when the state transition is small enough, public enough, and l
 
 This road is more expressive than it first looks. A single global state UTXO is sequential, but Kaspa's high-frequency DAG makes many covenant families viable when state is split into independent lanes. A token system, market, game league, vault set, or routing family can have many live UTXOs advancing in parallel, with occasional merge or leader/delegate transitions when shared coordination is needed.
 
-Silverscript is the intended authoring surface for this road. Argent is best understood as the next layer up: actor-style, multi-contract source that can lower into Silverscript the way `async` lowers into a more mechanical runtime shape.
+Silverscript is the intended authoring surface for L1 covenant apps. Argent is best understood as the next layer up: actor-style, multi-contract source that can lower into Silverscript the way `async` lowers into a more mechanical runtime shape.
 
 Start with [Covenant State](./covenant-state).
 
@@ -165,7 +165,7 @@ Continue with [Transaction V1](./transaction-v1).
 
 ## How To Read This Book
 
-The book is arranged as a builder path rather than a protocol spec.
+The book is arranged as a builder sequence rather than a protocol spec.
 
 <Cards>
   <Card

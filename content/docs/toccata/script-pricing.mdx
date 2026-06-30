@@ -11,7 +11,7 @@ The transaction can be structurally valid and still fail script execution. If th
 spent input -> compute_budget -> script-unit limit -> script execution
 ```
 
-The move in Toccata is simple: replace the old signature-count budget with a runtime meter that can price the work covenants actually do.
+Toccata replaces the old signature-count budget with a runtime meter that can price the work covenants actually do.
 
 ## The Unit Ladder
 
@@ -91,7 +91,7 @@ Budget too high has the opposite cost: mass goes up, fees go up, and block admis
 
 ## Current Costs
 
-The exact constants below are the current Toccata pricing surface.
+The constants below are the current Toccata pricing rules.
 
 Hashing:
 
@@ -182,7 +182,7 @@ It subtracts the per-input free allowance, rounds up to the smallest `compute_bu
 
 V1 signatures do not sign `compute_budget`.
 
-That is not a convenience feature. It keeps user intent separate from resource fitting. A relayer, wallet, or miner can adjust the execution budget so the transaction has enough room to validate without changing the txid or invalidating signatures.
+This is a consensus design choice. It keeps user intent separate from resource fitting. A relayer, wallet, or miner can adjust the execution budget so the transaction has enough room to validate without changing the txid or invalidating signatures.
 
 The block-level transaction hash still commits to the budget. Once mined, the block commits to the resource choice.
 
