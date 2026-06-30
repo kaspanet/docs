@@ -10,7 +10,7 @@ Silverscript is the normal authoring path for Toccata covenants. You write the s
 > [!IMPORTANT]
 > Silverscript is still moving toward its audited release interface. Treat it as the intended covenant authoring direction, but check the repo and release notes before shipping production value.
 
-## State Becomes The Current Script
+## State becomes the current script
 
 Start with a small vault.
 
@@ -43,7 +43,7 @@ instead of manually assembling:
 stack layout + introspection opcodes + P2SH reconstruction + covenant bindings
 ```
 
-## Transaction Facts Without Raw Stack Work
+## Transaction facts without raw stack work
 
 Covenants need to read the transaction they are inside.
 
@@ -59,7 +59,7 @@ int out_idx = OpAuthOutputIdx(this.activeInputIndex, 0);
 
 This narrows the review surface. Reviewers can ask "which outputs are validated?" rather than reverse-engineering raw stack choreography.
 
-## Covenant Macros
+## Covenant macros
 
 The hard part of a covenant is rarely the arithmetic. It is the transaction layout.
 
@@ -105,7 +105,7 @@ flowchart LR
 
 Generated covenant wrappers should be consistent. The same leader/delegate and output-validation patterns should appear the same way across contracts.
 
-## Auth Binding And Cov Binding
+## Auth binding and cov binding
 
 Two transaction views come up constantly.
 
@@ -146,7 +146,7 @@ OpCovOutputIdx(cov_id, k)
 
 Auth binding is about "what did this input authorize?" Cov binding is about "what belongs to this covenant family in this transaction?"
 
-## Leader And Delegate Lowering
+## Leader and delegate lowering
 
 For many-input transitions, one input usually leads.
 
@@ -166,7 +166,7 @@ The leader does the expensive work: reading states, running the policy, and vali
 
 This pattern is easy to get subtly wrong by hand. It is much easier to review when generated consistently.
 
-## Foreign Templates
+## Foreign templates
 
 Multi-contract apps need one contract to validate another contract's state.
 
@@ -192,7 +192,7 @@ The script verifies that the output state is encoded under the expected template
 
 That is the bridge from one-contract covenants to contract families.
 
-## Covenant-Native Ownership
+## Covenant-native ownership
 
 Toccata ownership does not have to mean "a public key signed."
 
@@ -213,7 +213,7 @@ if(prev_states[i].identifierType == IDENTIFIER_PUBKEY) {
 
 The covenant-id branch is the key point. A covenant can own something as a covenant, not only through a key. That is where UTXO-native composition differs from account-style composition.
 
-## Tooling Shape
+## Tooling
 
 The current workspace includes:
 
@@ -230,7 +230,7 @@ cargo test -p silverscript-lang
 cargo run -p cli-debugger -- silverscript-lang/tests/examples/if_statement.sil --function hello
 ```
 
-## What To Tell An Agent
+## What to tell an agent
 
 When using coding agents, give them the covenant design before asking for code.
 

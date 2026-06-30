@@ -26,7 +26,7 @@ The interesting part is where `count` lives.
 
 It is not an account variable. It is not a node-side object. It is data inside the redeem-script preimage of the current UTXO.
 
-## The P2SH State Trick
+## The P2SH state pattern
 
 The live output is compact:
 
@@ -74,7 +74,7 @@ That is the covenant loop:
 
 The fourth step is the part older script systems struggle with. A covenant has to build or inspect enough bytes to know what the next output means. Toccata's byte and hash tools, including `OpCat`, `OpSubstr`, `OpBlake2b`, `OpBlake3`, and output introspection, are what make this pattern practical.
 
-## Why The Hash Keeps Changing
+## Why the hash keeps changing
 
 The P2SH hash commits to both contract and state. That supports state validation, but it creates a naming problem.
 
@@ -134,11 +134,11 @@ flowchart LR
     S --> O
 ```
 
-Consensus blocks unauthorized entrance into a covenant family. The script blocks invalid movement inside that family.
+Consensus blocks unauthorized entrance into a covenant family. The script checks whether the next state is actually valid.
 
 This is also why a covenant id on an ordinary P2PK-style output is not sufficient by itself. If the spending script only checks a signature, then it only checks a signature. Covenant behavior appears when the script actually reads covenant data and validates covenant outputs.
 
-## Auth Groups And Covenant Groups
+## Auth groups and covenant groups
 
 A transaction can carry several covenant flows at once. It can also include ordinary inputs and outputs for fees, change, routing, or batching. Scripts therefore need a clean way to ask two different questions.
 
@@ -190,7 +190,7 @@ This flexibility lets covenant transactions carry fees, change, batching inputs,
 
 Silverscript's covenant macros are mainly about generating this machinery reliably. Argent-style multi-contract source goes one level higher: it lets you describe roles and routes, then lower them into the Silverscript patterns.
 
-## Three Useful Shapes
+## Three useful patterns
 
 Most covenant transitions are built from a small set of patterns.
 
@@ -214,7 +214,7 @@ State -> State_A + State_B + State_C
 
 This is how a covenant can split into independent lanes: mint tickets, create positions, open games, allocate shards, or distribute token state.
 
-### Merge Or Many-To-Many
+### Merge or many-to-many
 
 Many inputs participate in one transition.
 
@@ -240,7 +240,7 @@ sequenceDiagram
 
 This is a recurring Toccata pattern because it centralizes the expensive reasoning while preventing passive participants from being dragged into the wrong transition.
 
-## Why High Frequency Matters
+## Why high frequency changes the design space
 
 Covenants are sometimes dismissed as "one UTXO, one bottleneck." That is true only for designs that force all state through one UTXO.
 
@@ -253,7 +253,7 @@ Kaspa's high-frequency DAG changes the design space. If your application can spl
 
 This is where covenant systems start to look less like single contracts and more like small protocol families.
 
-## Indexers And Launch Proofs
+## Indexers and launch proofs
 
 The live UTXO stores a P2SH commitment, not a decoded state object. A reader that wants to show application state needs a decoding path.
 
@@ -289,7 +289,7 @@ flowchart TB
 
 An explorer can show balances and UTXOs with less context. A covenant-aware wallet, app frontend, or auditor needs enough preimage material to explain what those UTXOs mean.
 
-## What To Build Next
+## What to build next
 
 If your app is one lane or many independent lanes, continue with [Silverscript](./silverscript).
 

@@ -3,9 +3,9 @@ title: Script Pricing
 description: "How Toccata turns compute budgets into script-unit limits, and why transactions fail when the budget is wrong."
 ---
 
-Script pricing is where a covenant's transition policy meets validation resources.
+A covenant transaction can be structurally correct and still fail because the input did not buy enough execution room.
 
-The transaction can be structurally valid and still fail script execution. If the active input runs out of committed execution room, validation fails.
+If the active input runs out of committed execution room, validation fails.
 
 ```text
 spent input -> compute_budget -> script-unit limit -> script execution
@@ -13,7 +13,7 @@ spent input -> compute_budget -> script-unit limit -> script execution
 
 Toccata replaces the old signature-count budget with a runtime meter that can price the work covenants actually do.
 
-## The Unit Ladder
+## The unit ladder
 
 There are three names in play.
 
@@ -53,7 +53,7 @@ The allowance is one unit less than a full compute-budget step. That gives tiny 
 | `19,999`              | `1`                          |
 | `20,000`              | `2`                          |
 
-## What The Meter Charges
+## What the meter charges
 
 The meter follows runtime work, not only signatures.
 
@@ -67,7 +67,7 @@ It charges:
 
 That is why v1 needs `compute_budget`. A static sig-op count cannot price `OpBlake3`, covenant byte construction, stack growth, or `OpZkPrecompile`.
 
-## Small Scripts Fail Too
+## Small scripts fail too
 
 A common debugging path looks like this:
 
@@ -87,9 +87,9 @@ flowchart LR
 
 The script did not fail because the state rule was wrong. It failed because the input did not buy enough execution room.
 
-Budget too high has the opposite cost: mass goes up, fees go up, and block admission gets worse. Generated builders should estimate script units and set the input budget, not ask users to guess.
+Budget too high has the opposite cost: mass goes up, fees go up, and block admission gets worse. Generated transaction builders should estimate script units and set the input budget, not ask users to guess.
 
-## Current Costs
+## Current costs
 
 The constants below are the current Toccata pricing rules.
 
@@ -127,7 +127,7 @@ ZK precompile verification:
 
 For Groth16, the variable part follows the `gamma_abc` element count, which is public inputs plus one.
 
-## Budget Sizing By Hand
+## Budget sizing by hand
 
 Suppose an input script uses:
 
@@ -168,9 +168,9 @@ A Groth16 proof with 5 public inputs costs:
 budget = ceil((15,500,000 - 9,999) / 10,000) = 1,550
 ```
 
-Those examples are sizing intuition, not a substitute for tooling. Real builders should compute the budget from the generated script and proof path they are actually submitting.
+Those examples are sizing intuition, not a substitute for tooling. Production transaction builders should compute the budget from the generated script and proof path they are actually submitting.
 
-If you are building inside `rusty-kaspa`, or mirroring its rules in another builder, the canonical helper is:
+If you are building inside `rusty-kaspa`, or mirroring its rules in another transaction builder, the canonical helper is:
 
 ```rust
 ComputeBudget::checked_covering_script_units(required_script_units)
@@ -178,7 +178,7 @@ ComputeBudget::checked_covering_script_units(required_script_units)
 
 It subtracts the per-input free allowance, rounds up to the smallest `compute_budget` that covers the required script units, and returns `None` if the result cannot fit in the v1 `u16` budget field.
 
-## Why Budget Is Outside The Signature
+## Why budget is outside the signature
 
 V1 signatures do not sign `compute_budget`.
 
@@ -186,7 +186,7 @@ This is a consensus design choice. It keeps user intent separate from resource f
 
 The block-level transaction hash still commits to the budget. Once mined, the block commits to the resource choice.
 
-## What To Do In Tooling
+## What to do in tooling
 
 For covenant tooling:
 

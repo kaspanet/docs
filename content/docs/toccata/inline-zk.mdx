@@ -24,7 +24,7 @@ flowchart LR
 
 The L1 state can be a commitment instead of the full state. The transition function can run off-chain. The script only accepts the next UTXO if the proof binds the old commitment, the new commitment, and the exact program the covenant intended to use.
 
-## What The Proof Buys
+## What the proof buys
 
 Without ZK, a covenant script has to execute the transition logic directly or inspect enough public data to validate it.
 
@@ -53,7 +53,7 @@ The precompile dispatches by tag:
 
 The script should treat a proof as meaningful only under the exact verification key, image id, public inputs, and state commitments it expects. A proof that is valid for the wrong program is not useful to the covenant.
 
-## The Covenant Still Owns The Output
+## The covenant still owns the output
 
 Inline ZK is a proof check inside the covenant loop.
 
@@ -82,7 +82,7 @@ flowchart TB
     P --> S --> O
 ```
 
-## Where Inline ZK Fits
+## Where inline ZK fits
 
 Inline ZK fits when each action can settle on its own:
 
@@ -94,7 +94,7 @@ Inline ZK fits when each action can settle on its own:
 
 The state transition may be private, expensive, or both. The public L1 state can stay as a hash.
 
-## Where It Stops Fitting
+## Where it stops fitting
 
 Inline ZK becomes awkward when the app really wants a shared off-chain runtime.
 
@@ -108,7 +108,7 @@ Watch for these signs:
 
 Those requirements move beyond "one covenant action, one proof." They point toward a based app.
 
-## Inline ZK And Based Apps
+## Inline ZK and based apps
 
 Inline ZK and based apps share proof verification, but they use it at different scales.
 

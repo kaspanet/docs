@@ -3,7 +3,7 @@ title: Transaction V1
 description: "The transaction body that Toccata covenants, user lanes, compute budgets, and v1 hashes all meet inside."
 ---
 
-A covenant can compute the next state, but it cannot create the next UTXO by wishing.
+A covenant can compute the next state, but the spending transaction still has to create the next UTXO.
 
 The spending transaction has to carry the right body:
 
@@ -14,7 +14,7 @@ The spending transaction has to carry the right body:
 
 That is transaction version 1.
 
-## The Old Body Was Too Narrow
+## The old body was too narrow
 
 Version 0 is still the ordinary Kaspa transaction layout. It has inputs, outputs, `lock_time`, `subnetwork_id`, `gas`, `payload`, and a mass commitment.
 
@@ -42,84 +42,50 @@ TransactionOutputV0 {
 
 There is no place for an output to say: "I am the authorized successor of covenant id `X`, created by input `i`."
 
-## What V1 Moves
+## What v1 changes
 
 V1 keeps the outer transaction body familiar and changes the parts Toccata needs.
 
 V1 moves execution metering into `compute_budget` and gives outputs a place to carry covenant lineage.
 
-<div className="not-prose my-6 grid gap-4 md:grid-cols-2">
-  <div className="rounded-lg border bg-card p-4 text-sm">
-    <div className="mb-3 font-semibold">Version 0</div>
-    <div className="space-y-3">
-      <div className="rounded-md border bg-background p-3">
-        <div className="font-medium">Transaction</div>
-        <div className="mt-2 grid gap-1 text-muted-foreground">
-          <span>version</span>
-          <span>inputs[]</span>
-          <span>outputs[]</span>
-          <span>lock_time</span>
-          <span>subnetwork_id</span>
-          <span>gas</span>
-          <span>payload</span>
-          <span>mass</span>
-        </div>
-      </div>
-      <div className="rounded-md border bg-background p-3">
-        <div className="font-medium">Input</div>
-        <div className="mt-2 grid gap-1 text-muted-foreground">
-          <span>previous_outpoint</span>
-          <span>signature_script</span>
-          <span>sequence</span>
-          <span className="font-semibold text-foreground">sig_op_count: u8</span>
-        </div>
-      </div>
-      <div className="rounded-md border bg-background p-3">
-        <div className="font-medium">Output</div>
-        <div className="mt-2 grid gap-1 text-muted-foreground">
-          <span>value</span>
-          <span>script_public_key</span>
-        </div>
-      </div>
-    </div>
-  </div>
+At the level most app code cares about, the change is small but decisive:
 
-  <div className="rounded-lg border bg-card p-4 text-sm">
-    <div className="mb-3 font-semibold">Version 1</div>
-    <div className="space-y-3">
-      <div className="rounded-md border bg-background p-3">
-        <div className="font-medium">Transaction</div>
-        <div className="mt-2 grid gap-1 text-muted-foreground">
-          <span>version</span>
-          <span>inputs[]</span>
-          <span>outputs[]</span>
-          <span>lock_time</span>
-          <span className="font-semibold text-foreground">subnetwork_id</span>
-          <span className="font-semibold text-foreground">gas</span>
-          <span className="font-semibold text-foreground">payload</span>
-          <span>mass</span>
-        </div>
-      </div>
-      <div className="rounded-md border bg-background p-3">
-        <div className="font-medium">Input</div>
-        <div className="mt-2 grid gap-1 text-muted-foreground">
-          <span>previous_outpoint</span>
-          <span>signature_script</span>
-          <span>sequence</span>
-          <span className="font-semibold text-foreground">compute_budget: u16</span>
-        </div>
-      </div>
-      <div className="rounded-md border bg-background p-3">
-        <div className="font-medium">Output</div>
-        <div className="mt-2 grid gap-1 text-muted-foreground">
-          <span>value</span>
-          <span>script_public_key</span>
-          <span className="font-semibold text-foreground">covenant: Option&lt;CovenantBinding&gt;</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+```text
+transaction v0
++-- inputs[]
+|   +-- previous_outpoint
+|   +-- signature_script
+|   +-- sequence
+|   +-- sig_op_count: u8
++-- outputs[]
+|   +-- value
+|   +-- script_public_key
++-- lock_time
++-- subnetwork_id
++-- gas
++-- payload
++-- mass
+```
+
+```text
+transaction v1
++-- inputs[]
+|   +-- previous_outpoint
+|   +-- signature_script
+|   +-- sequence
+|   +-- compute_budget: u16
++-- outputs[]
+|   +-- value
+|   +-- script_public_key
+|   +-- covenant_binding?
+|       +-- authorizing_input
+|       +-- covenant_id
++-- lock_time
++-- subnetwork_id
++-- gas
++-- payload
++-- mass
+```
 
 The implementation uses version-aware encoding around one core transaction model. In practice:
 
@@ -128,7 +94,7 @@ The implementation uses version-aware encoding around one core transaction model
 - v0 outputs must not carry covenant bindings;
 - v1 outputs may carry `CovenantBinding`.
 
-The binding is small:
+The binding itself is small:
 
 ```rust
 CovenantBinding {
@@ -137,9 +103,9 @@ CovenantBinding {
 }
 ```
 
-The meaning is not small. It says that this output belongs to a covenant family and points to the input that authorized its creation.
+That field is how a successor output points back to the input that authorized it.
 
-## Compute Budget Is Not User Intent
+## Compute budget is not user intent
 
 It is tempting to treat execution budget as part of the spender's permanent policy.
 
@@ -155,7 +121,7 @@ If the budget is too low, validation fails. If it is too high, the transaction p
 
 The full pricing ladder belongs in [Script Pricing](./script-pricing). The transaction chapter only needs the structural fact: v1 puts the budget on each input, and only the full transaction hash commits to it.
 
-## Covenant Binding Lives On The Successor
+## Covenant binding lives on the successor
 
 A covenant spend usually creates at least one successor output.
 
@@ -178,7 +144,7 @@ Consensus can reject an output that tries to enter a covenant family without aut
 
 A covenant binding on a key-spend output does not turn that key-spend into a covenant. If the script never reads covenant data, it never enforces covenant rules.
 
-## Lanes And Gas Are Ordinary Fields
+## Lanes and gas are ordinary fields
 
 The `subnetwork_id`, `gas`, and `payload` fields existed before v1, but Toccata changes what version 1 transactions may do with them.
 
@@ -204,7 +170,7 @@ payload       = app operation bytes
 
 The app-specific meaning of that payload is not a consensus concern. The lane and payload become useful because KIP-21 gives later proofs an app-local sequencing commitment to bind to.
 
-## Three Projections Of One Transaction
+## Three projections of one transaction
 
 The same v1 transaction is viewed through three different commitments.
 
@@ -238,7 +204,7 @@ The split is not aesthetic. It keeps three jobs from stepping on each other:
 
 The payload appears in two different hash contexts. The v1 txid uses the BLAKE3 `PayloadDigest`. The sighash uses the legacy signing payload hash path. Do not reuse one as the other.
 
-## Commitment Matrix
+## Commitment matrix
 
 | Field                               | txid                  | `tx::hash` | sighash                      |
 | ----------------------------------- | --------------------- | ---------- | ---------------------------- |
@@ -253,7 +219,7 @@ The payload appears in two different hash contexts. The v1 txid uses the BLAKE3 
 | payload                             | v0 raw; v1 via digest | yes, raw   | yes, signing payload hash    |
 | transaction mass                    | no                    | yes        | no                           |
 
-## Builder Traps
+## Implementation traps
 
 - If you use v0 txid logic for v1, downstream proofs and indexes will point at the wrong transaction id.
 - If you expect signatures to freeze `compute_budget`, budget adjustment will fail for the wrong reason.

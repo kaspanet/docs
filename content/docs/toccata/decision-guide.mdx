@@ -14,9 +14,9 @@ Can the app be expressed as many live UTXO state lanes,
 or does it need many users mutating one shared state object?
 ```
 
-That answer does more work than any smart-contract taxonomy.
+That answer is usually more useful than starting from a smart-contract taxonomy.
 
-## The First Split
+## The first split
 
 ```mermaid
 flowchart TD
@@ -33,13 +33,13 @@ flowchart TD
     P -->|"yes"| I["add inline ZK"]:::zk
     P -->|"no"| S["Silverscript covenant"]:::cov
 
-    M --> G["Silverscript now<br/>Argent-shaped lowering later"]:::warn
+    M --> G["Silverscript now<br/>Argent-style lowering later"]:::warn
     B --> V["vprogs-style runtime<br/>proof settlement"]:::zk
 ```
 
 The diagram is a heuristic: choose the state layout before choosing infrastructure.
 
-## Covenants Are Not The Toy Path
+## L1 covenants can go far
 
 A single mutable UTXO is sequential. That part is real.
 
@@ -59,15 +59,15 @@ Kaspa's 10 BPS target changes this calculation. If an app can partition its stat
 
 Start with covenants when:
 
-| If the app needs                                      | Covenant design                                   |
-| ----------------------------------------------------- | ------------------------------------------------- |
-| one state lane                                        | singleton covenant                                |
-| many independent positions, tickets, vaults, or games | fanout covenant family                            |
-| token-like conservation across inputs/outputs         | shared covenant id with leader/delegate           |
-| roles and routes                                      | multi-contract Silverscript, Argent-shaped design |
-| one private or heavy local predicate                  | inline ZK inside a covenant                       |
+| If the app needs                                      | Covenant design                                  |
+| ----------------------------------------------------- | ------------------------------------------------ |
+| one state lane                                        | singleton covenant                               |
+| many independent positions, tickets, vaults, or games | fanout covenant family                           |
+| token-like conservation across inputs/outputs         | shared covenant id with leader/delegate          |
+| roles and routes                                      | multi-contract Silverscript, Argent-style design |
+| one private or heavy local predicate                  | inline ZK inside a covenant                      |
 
-## Where Covenants Bite
+## Where covenants get hard
 
 Covenants get hard when the app's core invariant is shared mutable state.
 
@@ -75,7 +75,7 @@ Watch for:
 
 - every user racing for the same live UTXO;
 - correctness depending on global absence of UTXOs;
-- transaction builders needing to discover and coordinate many state fragments;
+- transaction construction needing to discover and coordinate many state fragments;
 - route witnesses growing large;
 - launch proofs becoming essential to basic wallet UX;
 - users expecting immediate composability with state that lives somewhere else.
@@ -84,11 +84,11 @@ Those are not automatic exits. They are design alarms.
 
 Sometimes the right move is still a covenant family with better state layout. Sometimes the right move is a based app.
 
-## Advanced Covenant Patterns
+## Advanced covenant patterns
 
 There are covenant designs that push toward shared state without immediately becoming based apps.
 
-### Replicated Shared State
+### Replicated shared state
 
 One idea is to create replicas of a shared state UTXO and let updates propagate quickly enough for the app's tolerance.
 
@@ -102,13 +102,13 @@ No consensus change is required. The burden moves into protocol design:
 
 This can be real, but it is not a beginner pattern.
 
-### Miner-Resolved Covenant Inputs
+### Miner-resolved covenant inputs
 
 Another idea is to bind a transaction input to a covenant id rather than a specific UTXO, using sighash patterns such as anyone-can-pay or signature-from-stack style constructions. A miner could resolve the exact UTXO while building a block template.
 
 This likely needs mempool and node support. Treat it as a research path, not the normal way to ship a first app.
 
-## Based Apps Are Not Bigger Covenants
+## Based apps are not bigger covenants
 
 A based app changes the operational model.
 
@@ -132,7 +132,7 @@ The cost is infrastructure:
 
 Based apps are the right path when the shared-state win pays for that machinery.
 
-## Inline ZK Is A Local Tool
+## Inline ZK is a local tool
 
 Inline ZK is not the default path for every hard predicate.
 
@@ -146,7 +146,7 @@ Use it when a single covenant transition needs a proof:
 
 Avoid it when the app really wants many operations batched into one state transition. That is based-app territory.
 
-## A Practical Rule
+## A practical rule
 
 Pick the smallest model that carries the real invariant.
 

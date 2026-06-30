@@ -1,6 +1,6 @@
 ---
 title: Toccata Dev Guide
-description: "A builder guide to Kaspa's Toccata programmability stack: covenants, transaction v1, script pricing, inline ZK, based ZK apps, and Silverscript."
+description: "A developer guide to Kaspa's Toccata programmability stack: covenants, transaction v1, script pricing, inline ZK, based ZK apps, and Silverscript."
 ---
 
 Toccata makes Kaspa UTXOs expressive enough to carry real application state.
@@ -42,18 +42,18 @@ flowchart LR
 
 That is the core covenant move: compress, open, validate, recompress.
 
-The rest of Toccata supports that loop at production scale: transaction fields that bind covenant outputs, opcodes that let scripts inspect the transaction they are inside, consensus lineage for covenant families, pricing that meters expensive work, and proof hooks for applications that should not execute fully on L1.
+The rest of Toccata exists around that loop: transaction fields for covenant outputs, opcodes for inspecting the current transaction, consensus lineage for covenant families, pricing for expensive work, and proof hooks for applications that should not run fully on L1.
 
 > [!IMPORTANT]
-> The consensus features described here are mainnet features. The developer tooling is younger. Silverscript is the main covenant authoring path and is approaching the interface builders should expect, but release and audit status still need attention. Argent and vprogs are earlier reference stacks. Expect periodic guide updates as those repos move.
+> The consensus features described here are mainnet features. The developer tooling is younger. Silverscript is the main covenant authoring path and is approaching the interface developers should expect, but release and audit status still need attention. Argent and vprogs are earlier reference stacks. Expect periodic guide updates as those repos move.
 
-## What Toccata Adds
+## What Toccata adds
 
-Before Toccata, a Kaspa script could protect a UTXO, but it could not comfortably say: "if I am spent, the transaction must create my valid successor."
+Before Toccata, a Kaspa script could protect a UTXO, but it could not easily require the spending transaction to create a valid successor.
 
-Toccata gives scripts the missing pieces.
+Toccata adds the pieces needed for that check.
 
-| Piece                 | What it gives the builder                                                                 |
+| Piece                 | What it is for                                                                            |
 | --------------------- | ----------------------------------------------------------------------------------------- |
 | Transaction v1        | `compute_budget`, covenant output bindings, user lanes, gas, and the v1 BLAKE3 txid model |
 | Covenant IDs          | a consensus-tracked lineage label for covenant UTXOs, independent of changing P2SH hashes |
@@ -64,7 +64,7 @@ Toccata gives scripts the missing pieces.
 
 The result is still UTXO-native. Toccata does not turn Kaspa into an account-chain smart contract system. Instead it makes UTXOs able to carry state, split into lanes, merge when necessary, and prove the next step.
 
-## Two Roads
+## Two roads
 
 Most Toccata designs start on one of two roads.
 
@@ -81,7 +81,7 @@ flowchart TB
     Z["based ZK apps<br/>state transitions run off-chain, settle by proof"]:::zk
 
     S["Silverscript"]:::tool
-    A["Argent-shaped lowering"]:::tool
+    A["Argent-style lowering"]:::tool
     V["vprogs runtime"]:::tool
 
     L1 --> C
@@ -91,7 +91,7 @@ flowchart TB
     V --> Z
 ```
 
-### Road 1: L1 Covenants
+### Road 1: L1 covenants
 
 Use L1 covenants when the state transition is small enough, public enough, and local enough to run directly in script.
 
@@ -101,7 +101,7 @@ Silverscript is the intended authoring surface for L1 covenant apps. Argent is b
 
 Start with [Covenant State](./covenant-state).
 
-### Road 2: Based ZK Apps
+### Road 2: Based ZK apps
 
 Use a based app when the state is too shared, too private, or too expensive to execute directly on L1.
 
@@ -127,9 +127,9 @@ KIP-21 is what makes this practical. Without partitioned sequencing commitments,
 
 Start with [Based Apps](./based-apps).
 
-## Transaction V1 Is The Shared Floor
+## Transaction v1 is the shared floor
 
-Do not treat transaction v1 as a later chapter for protocol implementers. Every serious Toccata builder eventually touches it.
+Do not treat transaction v1 as a later chapter for protocol implementers. Every serious Toccata developer eventually touches it.
 
 Version 1 changes three things that show up immediately in application design:
 
@@ -163,9 +163,9 @@ That separation affects wallets, indexers, relayers, ZK guests, and anyone debug
 
 Continue with [Transaction V1](./transaction-v1).
 
-## How To Read This Book
+## How to read this book
 
-The book is arranged as a builder sequence rather than a protocol spec.
+The book is arranged as a reading sequence rather than a protocol spec.
 
 <Cards>
   <Card
@@ -204,7 +204,7 @@ If you are using coding agents, read [Agent Brief](./agent-brief) early and atta
 
 If you are making an architecture call, read [Decision Guide](./decision-guide) after the first three chapters. The core decision is usually about shared state: whether the app can be split into many UTXO lanes, whether it needs occasional coordinated transitions, or whether it really wants an off-chain state machine with proof-based settlement.
 
-## Status Notes
+## Status notes
 
 This guide uses present-tense language for Toccata consensus features because they are mainnet-active. Tooling status is different:
 
@@ -212,7 +212,7 @@ This guide uses present-tense language for Toccata consensus features because th
 - **Argent** is an experimental actor-style frontend for multi-contract covenant apps. The likely long-term framing is that Argent-like constructs become the multi-contract precompilation layer of the Silverscript toolchain.
 - **vprogs** is an evolving Rust runtime for based computation and RISC Zero proving. Its repo is a source of patterns, not yet a stable external developer API.
 
-## Terms You Will Keep Seeing
+## Terms you will keep seeing
 
 | Term               | Meaning                                                                                                                                  |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |

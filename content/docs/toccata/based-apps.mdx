@@ -20,9 +20,9 @@ flowchart LR
 
 L1 orders the operation and makes it available. The app runtime executes it off-chain. A settlement covenant later verifies a proof that the off-chain state moved correctly.
 
-## The Boring User Operation
+## The boring user operation
 
-The user operation is ordinary at consensus level.
+The user operation is boring in the useful sense: consensus does not interpret it as an app call.
 
 It is a v1 transaction with:
 
@@ -33,11 +33,11 @@ It is a v1 transaction with:
 | `payload`             | app operation bytes                        |
 | normal inputs/outputs | payment, fees, or app-specific conventions |
 
-The chain does not parse the app operation. The app runtime does.
+Kaspa orders the transaction and carries the bytes. The app runtime decides what those bytes mean.
 
 This split assigns ordering, data availability, and lane commitments to Kaspa L1. The app supplies execution semantics.
 
-## The Settlement Covenant
+## The settlement covenant
 
 The app also has an L1 covenant. This covenant does not execute every user operation directly. It tracks a compact commitment to the app state and accepts settlement proofs.
 
@@ -75,7 +75,7 @@ flowchart TB
 
 The covenant is the L1 settlement point. The runtime is where the app lives.
 
-## Why Lanes Exist
+## Why lanes exist
 
 Imagine doing this with one global accepted-transaction stream.
 
@@ -125,7 +125,7 @@ For deployed parameters, the access window is tied to finality depth. Mainnet fi
 
 The proof must bind to the seqcommit the script reads. Otherwise the executor could prove a valid transition over the wrong L1 activity.
 
-## vprogs Runtime Shape
+## vprogs runtime
 
 `vprogs` is the evolving reference runtime for this path.
 
@@ -160,9 +160,9 @@ Current high-level patterns:
 
 Treat this as an evolving runtime, not a frozen external SDK.
 
-## Guest Program Sketch
+## Guest program sketch
 
-A transaction processor guest is ordinary Rust-shaped code inside a RISC Zero guest.
+A transaction processor guest is ordinary Rust code inside a RISC Zero guest.
 
 ```rust
 #![no_std]
@@ -196,7 +196,7 @@ fn main() {
 
 This minimal guest increments each touched resource. The instructive part is the data flow: the host feeds encoded inputs, the guest updates resources, and the journal becomes material for later proof composition.
 
-## Settlement Journal
+## Settlement journal
 
 The current vprogs aggregate ABI uses a 320-byte `StateTransition` journal. In field order, it commits:
 
@@ -215,7 +215,7 @@ The current vprogs aggregate ABI uses a 320-byte `StateTransition` journal. In f
 
 The settlement script hashes the journal in the expected order and verifies that the proof produced exactly that journal.
 
-## Proof Modes
+## Proof modes
 
 The current vprogs settlement path uses two L1 proof modes:
 
@@ -226,7 +226,7 @@ The current vprogs settlement path uses two L1 proof modes:
 
 Other VMs or proof systems can be adopted later if they reduce to something Kaspa can verify on L1, or if new precompiles are added.
 
-## What Is Still Moving
+## What is still moving
 
 The based-app stack is early.
 

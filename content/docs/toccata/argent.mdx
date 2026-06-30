@@ -8,7 +8,7 @@ Argent is not a third road beside covenants and based apps.
 It is a prototype for the next layer above Silverscript: write a multi-contract covenant system as actors, roles, routes, and typed transitions; lower it into explicit Silverscript and then Kaspa script.
 
 ```text
-Argent-shaped source -> generated Silverscript -> Kaspa script
+Argent source -> generated Silverscript -> Kaspa script
 ```
 
 The analogy is `async` lowering into a state machine. The developer writes the compact source form. The compiler expands it into the mechanical runtime representation: state fields, templates, routing checks, leader/delegate entrypoints, and successor validation.
@@ -16,7 +16,7 @@ The analogy is `async` lowering into a state machine. The developer writes the c
 > [!WARNING]
 > Argent is early. Treat [michaelsutton/argent](https://github.com/michaelsutton/argent) as a design direction and prototype, not a production-stable API.
 
-## The Problem It Points At
+## The problem it points at
 
 Silverscript can express multi-contract covenant systems. The difficult part is keeping the route plumbing correct.
 
@@ -32,7 +32,7 @@ A contract family needs to know:
 
 That is too much to leave as copy-pasted convention forever.
 
-## Source Model
+## Source model
 
 Argent prototypes use app-level declarations for actor families.
 
@@ -45,7 +45,7 @@ app Stones {
 }
 ```
 
-The vocabulary is actor-shaped:
+The vocabulary is actor-oriented:
 
 | Term       | Meaning                                        |
 | ---------- | ---------------------------------------------- |
@@ -60,7 +60,7 @@ The vocabulary is actor-shaped:
 
 The output should still be ordinary covenant code. Argent's job is to make the family-level intent explicit before lowering.
 
-## A Multi-Actor Flow
+## A multi-actor flow
 
 Stones is a contract family, not a single contract.
 
@@ -87,7 +87,7 @@ flowchart TB
 
 The generated code has to preserve role identity across changing P2SH state. A shared covenant id can say "same family." It cannot by itself say "this input is a Player and that output is a Game." Template validation carries the role identity.
 
-## Hidden ABI State
+## Hidden ABI state
 
 Generated Silverscript may carry fields that are not business state.
 
@@ -102,7 +102,7 @@ Those fields are route-safety state. Ordinary transitions preserve them so later
 
 That is the kind of data a developer should not hand-maintain in every transition if a compiler can preserve it.
 
-## Route Commitments
+## Route commitments
 
 Small apps can carry explicit template data. Larger apps probably need route commitments.
 
@@ -117,7 +117,7 @@ generated validation: validateOutputStateWithTemplate(...)
 
 Commit early, expand late. Long-lived state carries a compact route commitment. The witness expands the route only when a transition needs it.
 
-## Same Template And Foreign Template
+## Same template and foreign template
 
 When an output continues the same template as the active input, the generated code can use the simpler same-script path:
 
@@ -135,7 +135,7 @@ become Player(next_player)
 
 Peer input reads are also template-sensitive. Covenant grouping proves family membership. It does not automatically prove actor role.
 
-## Leader And Delegate Defaults
+## Leader and delegate defaults
 
 A good default actor transition has one leader and small delegates.
 
@@ -154,7 +154,7 @@ The leader reads peers and validates outputs. Delegates check that a valid leade
 
 This default leaves room for ordinary fee/change inputs and multiple auth groups in the same transaction.
 
-## Launch Proofs
+## Launch proofs
 
 Multi-contract apps need launch artifacts.
 
@@ -169,7 +169,7 @@ An indexer or auditor should be able to reconstruct:
 
 This is one of the places Argent-like tooling becomes more than syntax. A generated app should come with the artifact needed to read it.
 
-## The Compiler Obligation
+## The compiler obligation
 
 Generated code should eventually enforce:
 
@@ -184,7 +184,7 @@ Generated code should eventually enforce:
 
 Everything else should be ordinary app policy that a human can review.
 
-## How To Use Argent Today
+## How to use Argent today
 
 Use Argent as a design lens.
 
