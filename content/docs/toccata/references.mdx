@@ -1,0 +1,93 @@
+---
+title: References
+description: "The source map for Toccata consensus, tooling, proofs, and the local repos behind this guide."
+---
+
+This guide is a synthesis. The sources of truth are the KIPs and the implementation.
+
+When the guide and code disagree, follow the code and fix the guide.
+
+## KIPs
+
+| KIP                                                                | What to read it for                                  |
+| ------------------------------------------------------------------ | ---------------------------------------------------- |
+| [KIP-16](https://github.com/kaspanet/kips/blob/master/kip-0016.md) | `OpZkPrecompile`, Groth16, RISC Zero Succinct        |
+| [KIP-17](https://github.com/kaspanet/kips/blob/master/kip-0017.md) | covenant opcode extensions and script expressiveness |
+| [KIP-20](https://github.com/kaspanet/kips/blob/master/kip-0020.md) | covenant IDs, output bindings, covenant contexts     |
+| [KIP-21](https://github.com/kaspanet/kips/blob/master/kip-0021.md) | partitioned sequencing commitments and user lanes    |
+| [KIP-24](https://github.com/kaspanet/kips/blob/master/kip-0024.md) | transaction v1 fields and hashing                    |
+| [KIP-25](https://github.com/kaspanet/kips/blob/master/kip-0025.md) | compute budget and script pricing                    |
+
+## Rusty-Kaspa Code Map
+
+| Area                            | Files                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Transaction model               | `consensus/core/src/tx.rs`, `consensus/core/src/tx/serde_impl.rs`                                 |
+| V1 txid and `tx::hash`          | `consensus/core/src/hashing/tx.rs`                                                                |
+| Sighash                         | `consensus/core/src/hashing/sighash.rs`                                                           |
+| Compute budget and script units | `consensus/core/src/mass/units.rs`, `consensus/core/src/mass/mod.rs`                              |
+| Transaction validation          | `consensus/src/processes/transaction_validator/`                                                  |
+| Subnetwork and lane IDs         | `consensus/core/src/subnets.rs`                                                                   |
+| Covenant ID hashing             | `consensus/core/src/hashing/covenant_id.rs`                                                       |
+| Covenant contexts               | `crypto/txscript/src/covenants.rs`                                                                |
+| Opcodes                         | `crypto/txscript/src/opcodes/mod.rs`                                                              |
+| Runtime resource meter          | `crypto/txscript/src/runtime_resource_meter.rs`                                                   |
+| ZK precompile pricing           | `crypto/txscript/src/zk_precompiles/tags.rs`, `crypto/txscript/src/zk_precompiles/groth16/mod.rs` |
+| Toccata parameters              | `consensus/core/src/config/params.rs`, `consensus/core/src/constants.rs`                          |
+
+## Tooling Repos
+
+| Repo                                                     | What it is                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------ |
+| [silverscript](https://github.com/kaspanet/silverscript) | higher-level covenant language, compiler, examples, debugger       |
+| [argent](https://github.com/michaelsutton/argent)        | experimental actor-style frontend for multi-contract covenant apps |
+| [vprogs](https://github.com/kaspanet/vprogs)             | evolving runtime for based computation and RISC Zero proving       |
+| [research](https://github.com/kaspanet/research)         | vProgs yellow paper and related research material                  |
+
+## Local Reading Paths
+
+For covenant builders:
+
+```text
+silverscript/docs/TUTORIAL.md
+silverscript/docs/DECL.md
+silverscript/silverscript-lang/tests/examples/kcc20.sil
+silverscript/examples/chess/book/src/patterns.md
+```
+
+For multi-contract covenant builders:
+
+```text
+argent/docs/argent-design.md
+argent/examples/stones/README.md
+argent/build/stones/manifest.json
+argent/build/stones/sil/*.sil
+```
+
+For based-app builders:
+
+```text
+vprogs/README.md
+vprogs/docs/proving-pipeline.md
+vprogs/zk/backend/risc0/transaction-processor/src/main.rs
+vprogs/zk/backend/risc0/batch-processor/src/main.rs
+vprogs/zk/backend/risc0/batch-aggregator/src/main.rs
+vprogs/zk/abi/src/batch_aggregator/journal/state_transition.rs
+```
+
+## Narrative Source
+
+- [Kaspa Covenants: Toccata Hard Fork Outlook](https://medium.com/@michaelsuttonil/kaspa-covenants-toccata-hard-fork-outlook-a4d81a40900c)
+
+## What Still Needs Hardening
+
+This v1 guide is meant to be useful now, not frozen forever.
+
+Likely next hardening passes:
+
+- verify every Silverscript snippet against the current compiler;
+- add transaction-builder examples for v1 covenant spends;
+- add concrete launch-proof/indexer recipes;
+- replace several Mermaid sketches with reusable static diagrams;
+- deepen the vprogs chapter as the runtime API stabilizes;
+- add worked examples for one L1 covenant app and one based app.

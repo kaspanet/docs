@@ -1,5 +1,11 @@
 {
   "title": "Docs",
   "root": true,
-  "pages": ["programmability", "integrate", "resources", "references"]
+  "pages": [
+    "toccata",
+    "programmability",
+    "integrate",
+    "resources",
+    "references"
+  ]
 }

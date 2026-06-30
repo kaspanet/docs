@@ -1,0 +1,124 @@
+---
+title: Agent Brief
+description: "A compact brief for agent-assisted Toccata builders, with the mistakes agents are most likely to make."
+---
+
+Use this page when you want a coding agent to help with Toccata work.
+
+The goal is not to teach the agent everything. The goal is to stop it from importing the wrong contract model.
+
+## The Brief
+
+Toccata is Kaspa's mainnet programmability stack. It is UTXO-native, not account-native. An L1 covenant is a stateful UTXO whose spend validates its own successor output. State usually lives in a redeem-script preimage, while covenant IDs give stable lineage across changing P2SH hashes. Transaction v1 adds `compute_budget`, output covenant bindings, user lanes, gas, and a BLAKE3 payload/rest txid model. Based apps use ordinary v1 L1 payload transactions as ordered user operations, execute off-chain, and settle through ZK proofs verified by an L1 covenant. Use Silverscript for covenant source unless there is a reason not to. Treat Argent and vprogs as evolving stacks.
+
+## Reading Order
+
+For covenant work:
+
+1. [Covenant State](./covenant-state)
+2. [Transaction V1](./transaction-v1)
+3. [Script Pricing](./script-pricing)
+4. [Silverscript](./silverscript)
+5. [Decision Guide](./decision-guide)
+
+For based-app work:
+
+1. [Inline ZK](./inline-zk)
+2. [Based Apps](./based-apps)
+3. [Transaction V1](./transaction-v1)
+4. [Script Pricing](./script-pricing)
+5. [References](./references)
+
+## Facts The Agent Must Not Bend
+
+- V1 inputs use `compute_budget`; v0 inputs use `sig_op_count`.
+- V1 `compute_budget` is committed by `tx::hash`, not by txid or v1 sighash.
+- V1 output covenant bindings are committed by txid and `tx::hash`, and by sighash when the output is covered.
+- Covenant ID controls covenant-family admission. The script still validates the transition.
+- A P2SH state covenant changes script public key when state changes.
+- `compute_budget * 10,000 + 9,999` is the v1 per-input script-unit allowance.
+- `OpZkPrecompile` uses Groth16 tag `0x20` and RISC Zero Succinct tag `0x21`.
+- User-lane based-app operations are ordinary v1 L1 transactions with payload and lane id.
+- A user-lane subnetwork ID has shape `[namespace: 4 bytes, 0x00 * 16]`; `[x, 0x00 * 19]` shapes are reserved system IDs except native and coinbase.
+- KIP-21 lanes let app proofs focus on lane activity instead of total DAG activity.
+- Silverscript, Argent, and vprogs APIs may move. Check the repo before writing production code.
+
+## Prompt For Covenant Work
+
+```text
+You are helping build a Kaspa Toccata L1 covenant.
+
+Use Silverscript unless raw script is explicitly required.
+The app is UTXO-native. State lives in the redeem script preimage and the live UTXO is usually P2SH.
+Use covenant IDs for stable lineage.
+Make the script validate both the transition and the successor output script/covenant binding.
+Do not model this as an account-style global mutable contract.
+
+Before coding, identify:
+- state fields
+- transition shape: 1:1, 1:N, N:M, leader/delegate, or multi-contract
+- authorized successor outputs
+- whether foreign template validation is needed
+- indexer or launch proof requirements
+- transaction v1 compute budget assumptions
+```
+
+## Prompt For Based-App Work
+
+```text
+You are helping build a Kaspa Toccata based ZK app.
+
+The user operation is a v1 L1 transaction payload on an app user lane.
+The off-chain runtime executes ordered lane activity and produces a ZK proof.
+The L1 settlement covenant verifies the proof, the KIP-21 seqcommit anchor, and any exits.
+
+Do not model each user operation as a covenant spend unless explicitly asked.
+Use vprogs as an evolving reference, not a stable SDK.
+
+Before coding, identify:
+- lane subnetwork id and gas policy
+- payload format
+- app state root
+- execution resources
+- proof mode: RISC Zero Succinct or Groth16 reduction
+- settlement cadence
+- exit/permission output semantics
+- reorg and operator assumptions
+```
+
+## Common Failure Modes
+
+| Agent move                                            | Correction                                                |
+| ----------------------------------------------------- | --------------------------------------------------------- |
+| Treats covenants like account contracts               | Model them as UTXO state transitions                      |
+| Assumes covenant ID enforces app rules                | Consensus controls entrance; script controls transition   |
+| Checks inputs but not successor outputs               | A covenant must validate the next output                  |
+| Signs or hashes `compute_budget` in the wrong context | V1 txid and v1 sighash exclude it; `tx::hash` includes it |
+| Uses v0 txid logic for v1                             | V1 txid is BLAKE3 payload/rest                            |
+| Makes every based-app user op a covenant spend        | User ops are L1 payload transactions on a lane            |
+| Reaches for based apps too early                      | L1 covenants can scale when state splits into lanes       |
+| Forces covenants onto shared mutable app state        | Based apps exist for that shape                           |
+
+## Preflight Questions
+
+Ask the agent to answer these before implementation:
+
+- Is the app state one UTXO, many UTXO lanes, or one off-chain state root?
+- What must be impossible: unauthorized entrance, invalid transition, stale update, double spend, or invalid exit?
+- Which part is enforced by consensus, which by script, and which by off-chain tooling?
+- What does an indexer need to reconstruct live state?
+- Can output validation be generated by Silverscript macros or Argent-style lowering?
+- What proof, if any, is verified on L1?
+
+## Repo Map
+
+| Repo           | Use                                                                |
+| -------------- | ------------------------------------------------------------------ |
+| `rusty-kaspa`  | consensus, transaction v1, hashing, script engine, pricing, KIP-21 |
+| `kips`         | KIPs 16, 17, 20, 21, 24, 25                                        |
+| `silverscript` | covenant language, examples, macros, debugger                      |
+| `argent`       | experimental multi-contract actor frontend                         |
+| `vprogs`       | based-app runtime and RISC Zero proving pipeline                   |
+| `docs`         | rendered MDX docs                                                  |
+
+That short preflight usually saves more time than a long first implementation attempt.
