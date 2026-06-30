@@ -3,11 +3,11 @@ title: Toccata Dev Guide
 description: "A developer guide to Kaspa's Toccata programmability stack: covenants, transaction v1, script pricing, inline ZK, based ZK apps, and Silverscript."
 ---
 
-Toccata makes Kaspa UTXOs expressive enough to carry real application state.
+Toccata makes Kaspa UTXOs expressive enough to carry real application state. It is active on mainnet as of June 30, 2026, at DAA score `474_165_565`.
 
-As of June 30, 2026, Toccata is active on mainnet. In `rusty-kaspa`, mainnet activation is configured at DAA score `474_165_565`.
+Before listing opcodes, it is better to look at the smallest stateful object Toccata can express: a UTXO that requires its spend to create a valid successor.
 
-Start with one stateful coin rather than an opcode list.
+The first example is one stateful coin.
 
 ```js
 pragma silverscript ^0.1.0;
