@@ -1,7 +1,6 @@
 {
   "title": "Toccata",
   "pages": [
-    "index",
     "covenant-state",
     "transaction-v1",
     "script-pricing",
