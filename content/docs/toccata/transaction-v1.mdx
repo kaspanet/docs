@@ -141,9 +141,9 @@ The meaning is not small. It says that this output belongs to a covenant family 
 
 ## Compute Budget Is Not User Intent
 
-The trap is to treat execution budget like something the spender should sign forever.
+It is tempting to treat execution budget as part of the spender's permanent policy.
 
-That was the v0 mistake. A v0 sighash commits to sig-op counts. V1 corrects the shape: `compute_budget` is a resource commitment, not the user's covenant policy.
+Version 0 couples those concerns: a v0 sighash commits to sig-op counts. Version 1 separates them. `compute_budget` is a resource commitment, not the user's covenant policy.
 
 For a v1 input:
 
