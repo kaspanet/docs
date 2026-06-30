@@ -1,4 +1,5 @@
 {
   "title": "Programmability",
+  "description": "High-level programmability models for covenants, based apps, inline ZK, and future vProgs.",
   "pages": ["covenants", "based-apps", "full-vprogs", "inline-zk"]
 }
