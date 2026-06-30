@@ -7,7 +7,7 @@ Do not start with "is this app complex?"
 
 Complexity is not the axis. Shared state is.
 
-Ask the state-shape question first:
+Ask the state-layout question first:
 
 ```text
 Can the app be expressed as many live UTXO state lanes,
@@ -37,7 +37,7 @@ flowchart TD
     B --> V["vprogs-style runtime<br/>proof settlement"]:::zk
 ```
 
-The diagram is a heuristic: choose the state shape before choosing infrastructure.
+The diagram is a heuristic: choose the state layout before choosing infrastructure.
 
 ## Covenants Are Not The Toy Path
 
@@ -55,11 +55,11 @@ With Toccata, L1 covenants can:
 - merge through leader/delegate transitions;
 - use inline ZK for private or expensive local predicates.
 
-Kaspa's 10 BPS target matters here. If an app can partition its state, the DAG gives those lanes room to move. A covenant family that would bottleneck on a slower chain may be practical here.
+Kaspa's 10 BPS target changes this calculation. If an app can partition its state, the DAG gives those lanes room to move. A covenant family that would bottleneck on a slower chain may be practical here.
 
 Start with covenants when:
 
-| If the app needs                                      | Covenant shape                                    |
+| If the app needs                                      | Covenant design                                   |
 | ----------------------------------------------------- | ------------------------------------------------- |
 | one state lane                                        | singleton covenant                                |
 | many independent positions, tickets, vaults, or games | fanout covenant family                            |
@@ -127,7 +127,7 @@ The cost is infrastructure:
 
 - operators must run execution and proving;
 - settlement cadence affects user-visible finality;
-- reorg handling and proof pipelines matter;
+- reorg handling and proof pipelines must be handled;
 - L1 composability is often exit-style, not immediate at user-operation time.
 
 Based apps are the right path when the shared-state win pays for that machinery.
@@ -152,7 +152,7 @@ Pick the smallest model that carries the real invariant.
 
 1. Use one covenant when the state is naturally sequential.
 2. Use a covenant family when state can split into lanes.
-3. Use multi-contract covenants when roles and routes matter.
+3. Use multi-contract covenants when roles and routes dominate the design.
 4. Add inline ZK when a transition needs proof verification.
 5. Move to a based app when shared state and app-scale execution dominate.
 

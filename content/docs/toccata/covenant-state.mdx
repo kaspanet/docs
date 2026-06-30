@@ -116,7 +116,7 @@ Consensus enforces the entrance rule:
 
 The script enforces the transition rule:
 
-- the covenant input must verify the next state, output shape, amounts, and bindings.
+- the covenant input must verify the next state, output layout, amounts, and bindings.
 
 Those two halves are easy to blur, but they do different jobs.
 
@@ -186,13 +186,13 @@ flowchart TB
     F --> CH
 ```
 
-This flexibility matters. A covenant script should not have to assume that the entire transaction belongs to it. It should be able to find the subset that matters and ignore the rest.
+This flexibility lets covenant transactions carry fees, change, batching inputs, or other covenant flows. A covenant script should not have to assume that the entire transaction belongs to it. It should be able to find the subset it must validate and ignore the rest.
 
 Silverscript's covenant macros are mainly about generating this machinery reliably. Argent-style multi-contract source goes one level higher: it lets you describe roles and routes, then lower them into the Silverscript patterns.
 
 ## Three Useful Shapes
 
-Most covenant transitions are built from a small set of shapes.
+Most covenant transitions are built from a small set of patterns.
 
 ### Singleton
 
@@ -202,7 +202,7 @@ One input creates one successor.
 State_n -> State_n_plus_1
 ```
 
-This is the counter, vault, or single-lane state machine shape. It is simple, but it is sequential.
+This is the counter, vault, or single-lane state machine pattern. It is simple, but it is sequential.
 
 ### Fanout
 

@@ -16,7 +16,7 @@ That is transaction version 1.
 
 ## The Old Body Was Too Narrow
 
-Version 0 is still the ordinary Kaspa transaction shape. It has inputs, outputs, `lock_time`, `subnetwork_id`, `gas`, `payload`, and a mass commitment.
+Version 0 is still the ordinary Kaspa transaction layout. It has inputs, outputs, `lock_time`, `subnetwork_id`, `gas`, `payload`, and a mass commitment.
 
 The narrow part is inside the input:
 
@@ -182,7 +182,7 @@ A covenant binding on a key-spend output does not turn that key-spend into a cov
 
 The `subnetwork_id`, `gas`, and `payload` fields existed before v1, but Toccata changes what version 1 transactions may do with them.
 
-Post-Toccata valid subnetwork shapes include:
+Post-Toccata valid subnetwork forms include:
 
 | Shape                             | Meaning                                          |
 | --------------------------------- | ------------------------------------------------ |
@@ -190,9 +190,9 @@ Post-Toccata valid subnetwork shapes include:
 | `[0x01, 0x00 * 19]`               | coinbase                                         |
 | `[namespace: 4 bytes, 0x00 * 16]` | user lane, if `namespace[1..=3]` is not all-zero |
 
-Equivalently, the only valid `[x, 0x00 * 19]` shapes are native and coinbase. Other 19-zero-suffix IDs are reserved system shapes, not user lanes.
+Equivalently, the only valid `[x, 0x00 * 19]` forms are native and coinbase. Other 19-zero-suffix IDs are reserved system forms, not user lanes.
 
-Only v1 user-lane transactions may carry non-zero `gas`. Native and reserved system shapes stay gas-free.
+Only v1 user-lane transactions may carry non-zero `gas`. Native and reserved system forms stay gas-free.
 
 For a based app, this means the user operation can be an ordinary L1 transaction:
 

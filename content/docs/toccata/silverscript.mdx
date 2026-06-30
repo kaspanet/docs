@@ -5,10 +5,10 @@ description: "The main authoring path for Toccata L1 covenants: state, introspec
 
 Writing raw covenant script is possible. It also means debugging low-level stack behavior directly.
 
-Silverscript is the normal authoring path for Toccata covenants. You write the state and transition policy. The compiler handles low-level stack encoding, ABI shape, state validation helpers, and the repetitive covenant plumbing.
+Silverscript is the normal authoring path for Toccata covenants. You write the state and transition policy. The compiler handles low-level stack encoding, ABI layout, state validation helpers, and the repetitive covenant plumbing.
 
 > [!IMPORTANT]
-> Silverscript is still moving toward its audited release shape. Treat it as the intended covenant authoring direction, but check the repo and release notes before shipping production value.
+> Silverscript is still moving toward its audited release interface. Treat it as the intended covenant authoring direction, but check the repo and release notes before shipping production value.
 
 ## State Becomes The Current Script
 
@@ -61,7 +61,7 @@ This narrows the review surface. Reviewers can ask "which outputs are validated?
 
 ## Covenant Macros
 
-The hard part of a covenant is rarely the arithmetic. It is the transaction shape.
+The hard part of a covenant is rarely the arithmetic. It is the transaction layout.
 
 Silverscript covenant declarations let the developer say what kind of transition this is, then let the compiler generate the wrapper.
 
@@ -170,7 +170,7 @@ This pattern is easy to get subtly wrong by hand. It is much easier to review wh
 
 Multi-contract apps need one contract to validate another contract's state.
 
-The common shape is:
+The common construction is:
 
 ```text
 template prefix + state bytes + template suffix
@@ -232,7 +232,7 @@ cargo run -p cli-debugger -- silverscript-lang/tests/examples/if_statement.sil -
 
 ## What To Tell An Agent
 
-When using coding agents, give them the covenant shape before asking for code.
+When using coding agents, give them the covenant design before asking for code.
 
 Tell them:
 

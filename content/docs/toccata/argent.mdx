@@ -11,7 +11,7 @@ It is a prototype for the next layer above Silverscript: write a multi-contract 
 Argent-shaped source -> generated Silverscript -> Kaspa script
 ```
 
-The analogy is `async` lowering into a state machine. The developer writes the compact source shape. The compiler expands it into the mechanical runtime shape: state fields, templates, routing checks, leader/delegate entrypoints, and successor validation.
+The analogy is `async` lowering into a state machine. The developer writes the compact source form. The compiler expands it into the mechanical runtime representation: state fields, templates, routing checks, leader/delegate entrypoints, and successor validation.
 
 > [!WARNING]
 > Argent is early. Treat [michaelsutton/argent](https://github.com/michaelsutton/argent) as a design direction and prototype, not a production-stable API.
@@ -152,7 +152,7 @@ sequenceDiagram
 
 The leader reads peers and validates outputs. Delegates check that a valid leader is taking responsibility and that they are not authorizing stray outputs.
 
-That shape leaves room for ordinary fee/change inputs and multiple auth groups in the same transaction.
+This default leaves room for ordinary fee/change inputs and multiple auth groups in the same transaction.
 
 ## Launch Proofs
 
@@ -173,8 +173,8 @@ This is one of the places Argent-like tooling becomes more than syntax. A genera
 
 Generated code should eventually enforce:
 
-- declared covenant input shape;
-- declared authorized output shape;
+- declared covenant input layout;
+- declared authorized output layout;
 - hidden ABI state preservation;
 - typed foreign input checks;
 - same-template shortcuts where sound;
@@ -191,11 +191,11 @@ Use Argent as a design lens.
 It helps when:
 
 - one contract is not enough;
-- roles matter;
-- route safety matters;
-- launch proofs matter;
+- the app has distinct roles;
+- route safety is part of correctness;
+- launch proofs are needed for readers or auditors;
 - transaction builders become part of the protocol surface.
 
 For production covenant work today, start in Silverscript. Borrow Argent's way of thinking about roles, routes, and generated lowering.
 
-Use [Decision Guide](./decision-guide) when deciding whether a multi-contract covenant family is still the right shape, or whether the app has crossed into based-app territory.
+Use [Decision Guide](./decision-guide) when deciding whether a multi-contract covenant family is still the right architecture, or whether the app has crossed into based-app territory.
