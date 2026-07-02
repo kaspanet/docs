@@ -10,7 +10,7 @@ Complexity is not the axis. Shared state is.
 Ask the state-layout question first:
 
 ```text
-Can the app be expressed as many live UTXO state lanes,
+Can the app be expressed as many parallel live UTXOs,
 or does it need many users mutating one shared state object?
 ```
 
@@ -24,9 +24,9 @@ flowchart TD
     classDef zk fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
     classDef warn fill:#fff7e8,stroke:#c58b2a,color:#1f1b12
 
-    A{"Can state split into<br/>many UTXO lanes?"}
+    A{"Can state split into<br/>parallel UTXOs?"}
     A -->|"yes"| C["L1 covenant family"]:::cov
-    A -->|"mostly, with coordination"| M["multi-contract / multi-lane covenants"]:::cov
+    A -->|"mostly, with coordination"| M["multi-contract / parallel covenants"]:::cov
     A -->|"no, one shared app state dominates"| B["based app"]:::zk
 
     C --> P{"private or heavy<br/>local check?"}
@@ -51,17 +51,17 @@ With Toccata, L1 covenants can:
 - keep stable lineage through covenant IDs;
 - inspect transaction inputs and outputs;
 - validate same-template and foreign-template successor states;
-- split into many UTXO lanes;
+- split into many parallel UTXOs;
 - merge through leader/delegate transitions;
 - use inline ZK for private or expensive local predicates.
 
-Kaspa's 10 BPS target changes this calculation. If an app can partition its state, the DAG gives those lanes room to move. A covenant family that would bottleneck on a slower chain may be practical here.
+Kaspa's 10 BPS target changes this calculation. If an app can partition its state, the DAG gives those tracks room to move. A covenant family that would bottleneck on a slower chain may be practical here.
 
 Start with covenants when:
 
 | If the app needs                                      | Covenant design                                  |
 | ----------------------------------------------------- | ------------------------------------------------ |
-| one state lane                                        | singleton covenant                               |
+| one live state UTXO                                   | singleton covenant                               |
 | many independent positions, tickets, vaults, or games | fanout covenant family                           |
 | token-like conservation across inputs/outputs         | shared covenant id with leader/delegate          |
 | roles and routes                                      | multi-contract Silverscript, Argent-style design |
@@ -151,7 +151,7 @@ Avoid it when the app really wants many operations batched into one state transi
 Pick the smallest model that carries the real invariant.
 
 1. Use one covenant when the state is naturally sequential.
-2. Use a covenant family when state can split into lanes.
+2. Use a covenant family when state can split into parallel UTXOs.
 3. Use multi-contract covenants when roles and routes dominate the design.
 4. Add inline ZK when a transition needs proof verification.
 5. Move to a based app when shared state and app-scale execution dominate.

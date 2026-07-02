@@ -202,7 +202,7 @@ One input creates one successor.
 State_n -> State_n_plus_1
 ```
 
-This is the counter, vault, or single-lane state machine pattern. It is simple, but it is sequential.
+This is the counter, vault, or single-UTXO state machine pattern. It is simple, but it is sequential.
 
 ### Fanout
 
@@ -212,7 +212,7 @@ One input creates many successors.
 State -> State_A + State_B + State_C
 ```
 
-This is how a covenant can split into independent lanes: mint tickets, create positions, open games, allocate shards, or distribute token state.
+This is how a covenant can split into parallel lineages: mint tickets, create positions, open games, allocate shards, or distribute token state.
 
 ### Merge or many-to-many
 
@@ -291,7 +291,7 @@ An explorer can show balances and UTXOs with less context. A covenant-aware wall
 
 ## What to build next
 
-If your app is one lane or many independent lanes, continue with [Silverscript](./silverscript).
+If your app is one live UTXO or many independent UTXO lineages, continue with [Silverscript](./silverscript).
 
 If your app is a family of roles that route between templates, read [Argent](./argent).
 
