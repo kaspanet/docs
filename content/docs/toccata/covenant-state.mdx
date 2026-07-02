@@ -22,6 +22,11 @@ contract Counter(int init_count, int max_step) {
 }
 ```
 
+Declaration structure:
+
+- `init_count` and `max_step` are constructor arguments. They are compile-time values for this contract instance: once the script instance is built, they are constants baked into the redeem script.
+- `count` is a state field. Its current value is encoded in the redeem-script preimage, and a new value means a new P2SH commitment.
+
 The interesting part is where `count` lives.
 
 It is not an account variable. It is not a node-side object. It is data inside the redeem-script preimage of the current UTXO.
@@ -73,6 +78,46 @@ That is the covenant loop:
 4. The script verifies that the transaction recreates the contract with that next state.
 
 The fourth step is the part older script systems struggle with. A covenant has to build or inspect enough bytes to know what the next output means. Toccata's byte and hash tools, including `OpCat`, `OpSubstr`, `OpBlake2b`, `OpBlake3`, and output introspection, are what make this pattern practical.
+
+## What the macro expands into
+
+Silverscript covenant declarations are designed to hide the repetitive part. The compiler lowers the `Counter` transition above into an ordinary entrypoint plus a policy function. The generated helper names are shown here in readable form:
+
+```js
+contract Counter(int init_count, int max_step) {
+    int count = init_count;
+
+    function covenant_policy_increment(State prev_state, int step) : (State) {
+        require(step > 0);
+        require(step <= max_step);
+        return({ count: prev_state.count + step });
+    }
+
+    entrypoint function increment(int step) {
+        int auth_out_count = OpAuthOutputCount(this.activeInputIndex);
+
+        State prev_state = { count: count };
+        (State cov_new_state) = covenant_policy_increment(prev_state, step);
+        require(auth_out_count == 1);
+
+        int cov_out_idx = OpAuthOutputIdx(this.activeInputIndex, 0);
+        validateOutputState(cov_out_idx, cov_new_state);
+    }
+}
+```
+
+The wrapper does the transaction work around the policy:
+
+- `count` is the current state value pushed by the redeem-script preimage;
+- `covenant_policy_increment` is the user-written transition body, moved into a helper;
+- `entrypoint function increment(int step)` is the generated spend entrypoint selected by the transaction;
+- `OpAuthOutputCount` and `OpAuthOutputIdx` select the output authorized by this input;
+- `require(auth_out_count == 1)` enforces the singleton transition;
+- `validateOutputState(cov_out_idx, cov_new_state)` checks the successor output.
+
+That last call uses a reflection-like awareness of the current script. The spent script uses its own revealed bytes as the template for the successor. The compiler knows the layout of the contract currently being spent. It emits code that takes the current redeem script preimage, replaces the encoded state fields with `cov_new_state`, rebuilds the expected P2SH script public key, and compares it to the authorized output.
+
+So the output is not merely "some covenant output with the same id." It must commit to this same contract template, with the state fields changed exactly as the transition computed.
 
 ## Why the hash keeps changing
 
