@@ -135,11 +135,11 @@ flowchart LR
     S1 -->|"valid spend"| S2
 ```
 
-If the script hash is the covenant's only identity, the covenant changes its name every time its state changes.
+That changing P2SH commitment is useful: it is how the current state is committed. But it is a poor stable name for the application instance. Wallets, explorers, indexers, and other contracts need a handle that survives state transitions.
 
-Bitcoin-style designs can work around this with parent or grandparent preimages. The idea is to make fake successors unspendable by requiring the next spender to prove a relationship to the previous transaction. That works, but it is heavy: recursive preimages become part of the protocol, witness data grows, and the chain still does not know that a family of changing script hashes is one covenant lineage.
+There is a second, separate issue. A transaction must not be able to mint a new UTXO that merely claims to be part of an existing covenant family. Script-only covenant designs often handle this by carrying parent or grandparent transaction data and proving the relationship inside the script. That can make forged successors unspendable later, but it does not give consensus a native rule for rejecting the forged covenant-labeled output at creation time.
 
-Toccata makes lineage explicit.
+KIP-20 gives Toccata that native rule.
 
 ## Covenant IDs
 
@@ -154,7 +154,7 @@ CovenantBinding {
 
 An output may declare that it belongs to a covenant. When it becomes a UTXO, the UTXO entry carries the same `covenant_id`.
 
-Consensus enforces the entrance rule:
+Consensus enforces covenant membership at output creation:
 
 - a continuation output may carry covenant id `id` only if its `authorizing_input` spends a UTXO that already carries `id`;
 - a genesis output may carry `id` only if the id is derived from the authorizing outpoint and the authorized initial outputs.
