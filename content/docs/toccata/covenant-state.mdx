@@ -204,6 +204,8 @@ Toccata exposes both views.
 | outputs belonging to covenant `id` | `OpCovOutputCount(id)`, `OpCovOutputIdx(id, k)`        |
 | binding data on output `o`         | `OpOutputCovenantId(o)`, `OpOutputAuthorizingInput(o)` |
 
+Each count/index pair acts like an iterator over the relevant subset: first ask how many entries exist, then ask for the `k`-th input or output index.
+
 This supports transactions like:
 
 ```mermaid
