@@ -62,7 +62,7 @@ Toccata adds the pieces needed for that check.
 | ZK precompiles        | direct verification of Groth16 and RISC Zero Succinct proofs inside script                |
 | Seqcommit lanes       | app-specific L1 activity commitments for based apps, without proving the whole DAG        |
 
-The result is still UTXO-native. Toccata does not turn Kaspa into an account-chain smart contract system. Instead it makes UTXOs able to carry state, split into lanes, merge when necessary, and prove the next step.
+The result is still UTXO-native. Toccata does not turn Kaspa into an account-chain smart contract system. Instead it makes UTXOs able to carry state, split into parallel lineages, merge when necessary, and prove the next step.
 
 ## Two roads
 
@@ -95,11 +95,11 @@ flowchart TB
 
 Use L1 covenants when the state transition is small enough, public enough, and local enough to run directly in script.
 
-This road is more expressive than it first looks. A single global state UTXO is sequential, but Kaspa's high-frequency DAG makes many covenant families viable when state is split into independent lanes. A token system, market, game league, vault set, or routing family can have many live UTXOs advancing in parallel, with occasional merge or leader/delegate transitions when shared coordination is needed.
+A single state UTXO is sequential. That does not make every covenant app sequential. When state can be partitioned into positions, games, vaults, tickets, orders, shards, or similar app objects, each object can live on its own UTXO track: the current covenant UTXO plus the successor UTXOs that continue it. Kaspa's high-frequency DAG gives those UTXOs room to advance in parallel, while the covenant family can still merge lineages or coordinate them through leader/delegate transitions.
 
 Silverscript is the intended authoring surface for L1 covenant apps. Argent is best understood as the next layer up: actor-style, multi-contract source that can lower into Silverscript the way `async` lowers into a more mechanical runtime representation.
 
-Start with [Covenant State](./covenant-state).
+Start with [Covenant State](/toccata/covenant-state).
 
 ### Road 2: Based ZK apps
 
@@ -125,7 +125,7 @@ sequenceDiagram
 
 KIP-21 is what makes this practical. Without partitioned sequencing commitments, every app would need to prove not only which transactions targeted it, but also which transactions did not. With lanes, the proof can focus on the app's own L1 activity.
 
-Start with [Based Apps](./based-apps).
+Start with [Based Apps](/toccata/based-apps).
 
 ## Transaction v1 is the shared floor
 
@@ -159,9 +159,7 @@ flowchart LR
     S --> SR["signs covered outputs,<br/>not compute budget"]
 ```
 
-That separation affects wallets, indexers, relayers, ZK guests, and anyone debugging why two hashes that "should be the same" are not.
-
-Continue with [Transaction V1](./transaction-v1).
+Continue with [Transaction V1](/toccata/transaction-v1).
 
 ## How to read this book
 
@@ -200,9 +198,9 @@ The book is arranged as a reading sequence rather than a protocol spec.
   />
 </Cards>
 
-If you are using coding agents, read [Agent Brief](./agent-brief) early and attach it to implementation tasks. It tells an agent which mental model not to miss: validate the next output, respect covenant IDs, do not invent account-state assumptions, and check the exact repo behavior before making protocol claims.
+If you are using coding agents, read [Agent Brief](/toccata/agent-brief) early and attach it to implementation tasks. It tells an agent which mental model not to miss: validate the next output, respect covenant IDs, do not invent account-state assumptions, and check the exact repo behavior before making protocol claims.
 
-If you are making an architecture call, read [Decision Guide](./decision-guide) after the first three chapters. The core decision is usually about shared state: whether the app can be split into many UTXO lanes, whether it needs occasional coordinated transitions, or whether it really wants an off-chain state machine with proof-based settlement.
+If you are making an architecture call, read [Decision Guide](/toccata/decision-guide) after the first three chapters. The core decision is usually about shared state: whether the app can be split into many parallel UTXOs, whether it needs occasional coordinated transitions, or whether it really wants an off-chain state machine with proof-based settlement.
 
 ## Status notes
 

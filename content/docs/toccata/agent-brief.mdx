@@ -40,7 +40,7 @@ For based-app work:
 - `OpZkPrecompile` uses Groth16 tag `0x20` and RISC Zero Succinct tag `0x21`.
 - User-lane based-app operations are ordinary v1 L1 transactions with payload and lane id.
 - A user-lane subnetwork ID is `[namespace: 4 bytes, 0x00 * 16]`; `[x, 0x00 * 19]` forms are reserved system IDs except native and coinbase.
-- KIP-21 lanes let app proofs focus on lane activity instead of total DAG activity.
+- KIP-21 lanes let app proofs focus on lane activity instead of total DAG activity. Do not use the word "lane" to describe parallel UTXOs.
 - Silverscript, Argent, and vprogs APIs may move. Check the repo before writing production code.
 
 ## Prompt for covenant work
@@ -88,22 +88,22 @@ Before coding, identify:
 
 ## Common failure modes
 
-| Agent move                                            | Correction                                                |
-| ----------------------------------------------------- | --------------------------------------------------------- |
-| Treats covenants like account contracts               | Model them as UTXO state transitions                      |
-| Assumes covenant ID enforces app rules                | Consensus controls entrance; script controls transition   |
-| Checks inputs but not successor outputs               | A covenant must validate the next output                  |
-| Signs or hashes `compute_budget` in the wrong context | V1 txid and v1 sighash exclude it; `tx::hash` includes it |
-| Uses v0 txid logic for v1                             | V1 txid is BLAKE3 payload/rest                            |
-| Makes every based-app user op a covenant spend        | User ops are L1 payload transactions on a lane            |
-| Reaches for based apps too early                      | L1 covenants can scale when state splits into lanes       |
-| Forces covenants onto shared mutable app state        | Based apps exist for that architecture                    |
+| Agent move                                            | Correction                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| Treats covenants like account contracts               | Model them as UTXO state transitions                         |
+| Assumes covenant ID enforces app rules                | Consensus controls entrance; script controls transition      |
+| Checks inputs but not successor outputs               | A covenant must validate the next output                     |
+| Signs or hashes `compute_budget` in the wrong context | V1 txid and v1 sighash exclude it; `tx::hash` includes it    |
+| Uses v0 txid logic for v1                             | V1 txid is BLAKE3 payload/rest                               |
+| Makes every based-app user op a covenant spend        | User ops are L1 payload transactions on a lane               |
+| Reaches for based apps too early                      | L1 covenants can scale when state splits into parallel UTXOs |
+| Forces covenants onto shared mutable app state        | Based apps exist for that architecture                       |
 
 ## Preflight questions
 
 Ask the agent to answer these before implementation:
 
-- Is the app state one UTXO, many UTXO lanes, or one off-chain state root?
+- Is the app state one UTXO, many parallel UTXOs, or one off-chain state root?
 - What must be impossible: unauthorized entrance, invalid transition, stale update, double spend, or invalid exit?
 - Which part is enforced by consensus, which by script, and which by off-chain tooling?
 - What does an indexer need to reconstruct live state?
