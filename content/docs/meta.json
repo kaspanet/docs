@@ -3,7 +3,6 @@
   "description": "Builder docs for Kaspa integrations, Toccata programmability, references, and external resources.",
   "root": true,
   "pages": [
-    "toccata",
     "programmability",
     "integrate",
     "resources",
