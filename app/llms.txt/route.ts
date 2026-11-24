@@ -29,7 +29,7 @@ const sections: {
     ],
   },
   {
-    title: "Toccata: Covenants and Silverscript",
+    title: "Programmability: Covenants and Silverscript",
     description:
       "Use this pack for L1 covenant design, state transitions, transaction v1, compute budgets, and Silverscript covenant source.",
     pages: [
@@ -45,14 +45,15 @@ const sections: {
     ],
   },
   {
-    title: "Toccata: Based Apps and Inline ZK",
+    title: "Programmability: Based Apps and Inline ZK",
     description:
-      "Use this pack for user lanes, L1 payload operations, off-chain execution, proof settlement, and direct in-script proof verification.",
+      "Use this pack for user lanes, L1 payload operations, off-chain execution, proof settlement, direct in-script proof verification, and future vProgs.",
     pages: [
       { slugs: ["programmability", "agent-brief"] },
       { slugs: ["programmability"] },
       { slugs: ["programmability", "based-apps"] },
       { slugs: ["programmability", "inline-zk"] },
+      { slugs: ["programmability", "full-vprogs"] },
       { slugs: ["programmability", "transaction-v1"] },
       { slugs: ["programmability", "script-pricing"] },
       { slugs: ["programmability", "decision-guide"] },

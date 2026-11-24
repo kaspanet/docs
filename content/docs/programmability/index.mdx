@@ -1,6 +1,6 @@
 ---
-title: Toccata Dev Guide
-description: "A developer guide to Kaspa's Toccata programmability stack: covenants, transaction v1, script pricing, inline ZK, based ZK apps, and Silverscript."
+title: Programmability
+description: "Builder guide to Kaspa's Toccata mainnet programmability stack: covenants, transaction v1, script pricing, Silverscript, Argent, inline ZK, based apps, and research-level vProgs."
 ---
 
 Toccata makes Kaspa UTXOs expressive enough to carry real application state. It is active on mainnet as of June 30, 2026, at DAA score `474_165_565`.
@@ -53,14 +53,14 @@ Before Toccata, a Kaspa script could protect a UTXO, but it could not easily req
 
 Toccata adds the pieces needed for that check.
 
-| Piece                 | What it is for                                                                                                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Transaction v1        | `compute_budget`, covenant output bindings, user lanes, gas, and the v1 BLAKE3 txid model                                                                                          |
-| Covenant IDs          | a consensus-tracked lineage label for covenant UTXOs, independent of changing P2SH hashes                                                                                          |
-| Introspection opcodes | access to inputs, outputs, covenant groups, auth groups, hashes, and byte slices                                                                                                   |
-| Script pricing        | a runtime meter for stack growth, hashing, signatures, and ZK verification                                                                                                         |
-| ZK precompiles        | direct verification of generic BN254 Groth16 (`0x20`) proofs inside script; native RISC Zero STARK (`0x21`) is deprecated for new deployments ([see advisory](/toccata/inline-zk)) |
-| Seqcommit lanes       | app-specific L1 activity commitments for based apps, without proving the whole DAG                                                                                                 |
+| Piece                 | What it is for                                                                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Transaction v1        | `compute_budget`, covenant output bindings, user lanes, gas, and the v1 BLAKE3 txid model                                                                                                  |
+| Covenant IDs          | a consensus-tracked lineage label for covenant UTXOs, independent of changing P2SH hashes                                                                                                  |
+| Introspection opcodes | access to inputs, outputs, covenant groups, auth groups, hashes, and byte slices                                                                                                           |
+| Script pricing        | a runtime meter for stack growth, hashing, signatures, and ZK verification                                                                                                                 |
+| ZK precompiles        | direct verification of generic BN254 Groth16 (`0x20`) proofs inside script; native RISC Zero STARK (`0x21`) is deprecated for new deployments ([see advisory](/programmability/inline-zk)) |
+| Seqcommit lanes       | app-specific L1 activity commitments for based apps, without proving the whole DAG                                                                                                         |
 
 The result is still UTXO-native. Toccata does not turn Kaspa into an account-chain smart contract system. Instead it makes UTXOs able to carry state, split into parallel lineages, merge when necessary, and prove the next step.
 
@@ -99,7 +99,7 @@ A single state UTXO is sequential. That does not make every covenant app sequent
 
 Silverscript is the intended authoring surface for L1 covenant apps. Argent is best understood as the next layer up: actor-style, multi-contract source that can lower into Silverscript the way `async` lowers into a more mechanical runtime representation.
 
-Start with [Covenant State](/toccata/covenant-state).
+Start with [Covenant State](/programmability/covenant-state).
 
 ### Road 2: Based ZK apps
 
@@ -125,7 +125,7 @@ sequenceDiagram
 
 KIP-21 is what makes this practical. Without partitioned sequencing commitments, every app would need to prove not only which transactions targeted it, but also which transactions did not. With lanes, the proof can focus on the app's own L1 activity.
 
-Start with [Based Apps](/toccata/based-apps).
+Start with [Based Apps](/programmability/based-apps). For the mid- to long-term research direction on synchronous cross-app composability across independent apps, see [Full vProgs](/programmability/full-vprogs).
 
 ## Transaction v1 is the shared floor
 
@@ -159,7 +159,7 @@ flowchart LR
     S --> SR["signs covered outputs,<br/>not compute budget"]
 ```
 
-Continue with [Transaction V1](/toccata/transaction-v1).
+Continue with [Transaction V1](/programmability/transaction-v1).
 
 ## How to read this book
 
@@ -168,39 +168,39 @@ The book is arranged as a reading sequence rather than a protocol spec.
 <Cards>
   <Card
     title="Covenant State"
-    href="/toccata/covenant-state"
+    href="/programmability/covenant-state"
     description="Start here: P2SH state, covenant lineage, auth groups, cov groups, and indexer implications."
   />
   <Card
     title="Transaction V1"
-    href="/toccata/transaction-v1"
+    href="/programmability/transaction-v1"
     description="The field layout, txid split, compute budgets, covenant bindings, user lanes, and gas."
   />
   <Card
     title="Script Pricing"
-    href="/toccata/script-pricing"
+    href="/programmability/script-pricing"
     description="How compute budgets become script units, and why hashes, stack growth, signatures, and proofs cost what they cost."
   />
   <Card
     title="Silverscript"
-    href="/toccata/silverscript"
+    href="/programmability/silverscript"
     description="The main covenant authoring path: state, macros, generated wrappers, and reviewable transition patterns."
   />
   <Card
     title="Inline ZK"
-    href="/toccata/inline-zk"
+    href="/programmability/inline-zk"
     description="Classic covenants that verify proofs directly, useful for hidden transitions or specialized checks."
   />
   <Card
     title="Based Apps"
-    href="/toccata/based-apps"
+    href="/programmability/based-apps"
     description="L1 ordered user operations, off-chain execution, lane proofs, and settlement covenants."
   />
 </Cards>
 
-If you are using coding agents, read [Agent Brief](/toccata/agent-brief) early and attach it to implementation tasks. It tells an agent which mental model not to miss: validate the next output, respect covenant IDs, do not invent account-state assumptions, and check the exact repo behavior before making protocol claims.
+If you are using coding agents, read [Agent Brief](/programmability/agent-brief) early and attach it to implementation tasks. It tells an agent which mental model not to miss: validate the next output, respect covenant IDs, do not invent account-state assumptions, and check the exact repo behavior before making protocol claims.
 
-If you are making an architecture call, read [Decision Guide](/toccata/decision-guide) after the first three chapters. The core decision is usually about shared state: whether the app can be split into many parallel UTXOs, whether it needs occasional coordinated transitions, or whether it really wants an off-chain state machine with proof-based settlement.
+If you are making an architecture call, read [Decision Guide](/programmability/decision-guide) after the first three chapters. The core decision is usually about shared state: whether the app can be split into many parallel UTXOs, whether it needs occasional coordinated transitions, or whether it really wants an off-chain state machine with proof-based settlement.
 
 ## Status notes
 

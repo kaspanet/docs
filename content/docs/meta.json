@@ -1,11 +1,6 @@
 {
   "title": "Docs",
-  "description": "Builder docs for Kaspa integrations, Toccata programmability, references, and external resources.",
+  "description": "Builder docs for Kaspa programmability, node integrations, references, and external resources.",
   "root": true,
-  "pages": [
-    "programmability",
-    "integrate",
-    "resources",
-    "references"
-  ]
+  "pages": ["programmability", "integrate", "resources", "references"]
 }

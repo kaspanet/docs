@@ -1,0 +1,57 @@
+---
+title: "Research Direction: Full vProgs"
+description: "Mid- to long-term research on synchronous cross-app composability across sovereign verifiable programs — and how it differs from today's based apps."
+---
+
+> [!IMPORTANT]
+> **Research direction.** Full vProgs is a research-level architecture described in the draft [Kaspa Verifiable Programs (vProg) Yellow Paper](https://github.com/kaspanet/research/tree/main/vProgs). It requires L1 consensus extensions beyond Toccata and is not a live mainnet feature. If you are building today, use [L1 Covenants](./covenant-state) or [Based Apps](./based-apps).
+
+## How Full vProgs differ from Based Apps
+
+A [based app](./based-apps) on Toccata today is a single sovereign off-chain state machine ordered by a KIP-21 user lane and settled through an L1 ZK covenant. Accounts and logic compose synchronously *inside* that one app, while interacting across two independent based apps happens through L1 settlement, exits, or explicit bridging.
+
+**Full vProgs** extends that model to synchronous, atomic composability *between* independent sovereign apps — without collapsing them into a single monolithic shared execution layer.
+
+| Dimension          | Based Apps (Toccata today)                            | Full vProgs (mid- to long-term research)                                               |
+| ------------------ | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Status             | Buildable on Toccata mainnet primitives (KIP-21 + ZK) | Research-level ([Yellow Paper](https://github.com/kaspanet/research/tree/main/vProgs)) |
+| Composition scope  | App-local (synchronous inside one app)                | Cross-app (synchronous reads and atomic composition across independent vProgs)         |
+| L1 role            | Ordering, data availability, per-lane `SeqCommit`     | Adds Computation DAG metadata, vProg State Index, anchor checks, and `ScopeGas`        |
+| Proof model        | Per-app batch / aggregate settlement proof            | Conditional proof batches stitched across cross-vProg dependency segments              |
+| Cross-app movement | Via L1 settlement, exits, or explicit bridge steps    | Direct cross-vProg reads (and generalized multi-writer subtransactions)                |
+
+## Core ideas in the vProgs Yellow Paper
+
+Sovereignty (each app controls its own state, execution, and liveness) normally fights against synchronous composability (one transaction touching state across independent apps). The [vProgs Yellow Paper](https://github.com/kaspanet/research/tree/main/vProgs) proposes resolving that tension through **metered, on-site execution**:
+
+### Explicit read/write sets and the Computation DAG
+
+Each vProg exclusively owns write access to its own accounts, while other vProgs may read those accounts. Every transaction declares its **read set** and **write set** upfront.
+
+Kaspa L1 still does not execute vProg application logic. Instead, L1 uses those declarations to maintain the topology of a **Computation DAG (CD)** linking transactions to the account states they read and write.
+
+### Anchors and `ScopeGas` metering
+
+When a transaction in vProg A depends on foreign state from vProg B, vProg A's nodes must be able to derive those inputs locally without unbounded re-execution.
+
+- **Anchors:** Transactions supply historical account values backed by witnesses against already-proven commitments in an L1 **vProg State Index**. More frequent proof submissions make those anchors shallower.
+- **Scope and `ScopeGas`:** Starting from a transaction's read set, L1 traverses backward through the Computation DAG until it hits an anchor or a state already known to that vProg. That dependency subgraph is the transaction's **scope**, and L1 meters its aggregate cost (**`ScopeGas`**) per vProg — preventing external dependencies from overwhelming any single app.
+
+### Conditional proof batches and proof stitching
+
+Rather than forcing one monolithic global prover, specialized provers submit **conditional proof batches** attesting to transactions of a single vProg conditioned on their declared inputs. **Stitching proofs** then combine those conditional statements across a continuous segment of the Computation DAG to advance a vProg's L1 state commitment.
+
+### Optimistic speed with sovereign liveness
+
+Cooperating provers can share batch internals off-chain to stitch cross-app proofs quickly (**optimistic path**). Crucially, if another app's prover stalls or refuses to cooperate, a local prover can still reconstruct the needed dependencies from L1-available witnesses and prove the missing segment itself (**sovereign path**), keeping liveness independent of external provers.
+
+### App-controlled trust boundaries
+
+L1's Computation DAG only enforces structural validity. Each vProg decides for itself which foreign vProgs it trusts as valid read sources — rejecting transactions internally if they depend on unapproved programs.
+
+## Further reading
+
+- [Kaspa Verifiable Programs (vProg) Yellow Paper (`kaspanet/research/vProgs`)](https://github.com/kaspanet/research/tree/main/vProgs) — full draft specification (`vProgs_yellow_paper.pdf` and LaTeX source).
+- [A Basic Framework for Proofs Stitching (Kaspa Research Forum)](https://research.kas.pa/t/a-basic-framework-for-proofs-stitching/323) — early sketch of generalizing from single-writer to multi-writer atomic composability.
+
+For what you can build on mainnet today, return to [Based Apps](./based-apps) or the [Decision Guide](./decision-guide).

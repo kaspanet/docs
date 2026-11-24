@@ -17,6 +17,11 @@ const config = {
         destination: "/programmability/:path*",
         permanent: true,
       },
+      {
+        source: "/programmability/covenants",
+        destination: "/programmability/covenant-state",
+        permanent: true,
+      },
     ];
   },
 };
