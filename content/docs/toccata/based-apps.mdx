@@ -217,14 +217,17 @@ The settlement script hashes the journal in the expected order and verifies that
 
 ## Proof modes
 
-The current vprogs settlement path uses two L1 proof modes:
+> [!CAUTION]
+> Native RISC Zero STARK verification (`0x21`) is **unsound and deprecated** following [GHSA-g6qg-9j8p-7j87](https://github.com/risc0/risc0/security/advisories/GHSA-g6qg-9j8p-7j87). New based-app settlement covenants must use **Groth16 (`0x20`)** with patched verifier parameters (`kaspa-txscript-zk-sdk >= 2.2.0` and `RISC Zero >= 3.1.0` for RISC Zero, or another Groth16-compatible prover). See [Inline ZK](./inline-zk#risc-zero-advisory-and-remediation) and the [RISC Zero advisory post](https://medium.com/@michaelsuttonil/what-the-risc-zero-advisory-means-for-kaspas-zk-covenants-e8cb067ea65b).
 
-| Proof type                   | L1 precompile tag | Notes                                                      |
-| ---------------------------- | ----------------- | ---------------------------------------------------------- |
-| RISC Zero Succinct           | `0x21`            | STARK-based, larger, with post-quantum security properties |
-| RISC Zero reduced to Groth16 | `0x20`            | compact BN254 proof, not post-quantum                      |
+The active L1 settlement proof path uses `OpZkPrecompile` with generic BN254 Groth16:
 
-Other VMs or proof systems can be adopted later if they reduce to something Kaspa can verify on L1, or if new precompiles are added.
+| Proof type                                           | L1 precompile tag | Status     | Notes                                                                                              |
+| ---------------------------------------------------- | ----------------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| Groth16 (e.g., RISC Zero `3.1.0` wrapped to Groth16) | `0x20`            | Active     | Compact BN254 proof; L1 verifier is independent of RISC Zero (not post-quantum)                    |
+| RISC Zero Succinct (native STARK)                    | `0x21`            | Deprecated | Unsound consensus-pinned `4.0.4` circuit; retained for legacy UTXO compatibility only — do not use |
+
+Other VMs or proof systems can be used today whenever they reduce to BN254 Groth16 (`0x20`), or later as flexible native STARK verification and new precompiles are introduced.
 
 ## What is still moving
 

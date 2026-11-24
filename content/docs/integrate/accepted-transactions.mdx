@@ -111,7 +111,7 @@ Near the active DAG tips, virtual-chain movement is still settling, so ingestion
 
 Also treat `removedChainBlockHashes` as rollback input. Keep enough local state to know which processed transactions were attached to which accepting block. If a later response or notification removes one of those blocks from the virtual chain, invalidate the transactions you derived from it and then apply the accepted transactions that arrive for the replacement path described by `addedChainBlockHashes`.
 
-## Performence consideration
+## Performance considerations
 
 Because Kaspa’s architecture enables high throughput, you should design your pipelines to ingest events quickly. There is no single rule of thumb, but here are a few common patterns:
 

@@ -213,6 +213,10 @@ if(prev_states[i].identifierType == IDENTIFIER_PUBKEY) {
 
 The covenant-id branch is the key point. A covenant can own something as a covenant, not only through a key. That is where UTXO-native composition differs from account-style composition.
 
+## ZK verification builtins
+
+SilverScript exposes direct Groth16 verification through `g16.verify` (generic BN254 Groth16, unaffected by the RISC Zero advisory) and `r0.g16.verify` (updated in SilverScript `v1.0.2` to `kaspa-txscript-zk-sdk 2.2.0` / `RISC Zero 3.1.0`). The native STARK builtin `r0.succinct.verify` is disabled at compile time in `v1.0.2` due to [GHSA-g6qg-9j8p-7j87](https://github.com/risc0/risc0/security/advisories/GHSA-g6qg-9j8p-7j87); see [Inline ZK](./inline-zk#risc-zero-advisory-and-remediation).
+
 ## Tooling
 
 The current workspace includes:
