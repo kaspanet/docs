@@ -1,37 +1,44 @@
 ---
 title: Silverscript
-description: "The main authoring path for Toccata L1 covenants: state, introspection, macros, and generated transition checks."
+description: "The single-contract authoring path for Toccata L1 covenants: state, temporal checks, introspection, macros, ABI, and tooling."
 ---
 
-Writing raw covenant script is possible. It also means debugging low-level stack behavior directly.
+Silverscript is the language and compiler for Toccata L1 covenants. You write contract state and transition policy; the compiler handles stack encoding, portable ABI layout, state-validation helpers, and repetitive covenant plumbing so you do not have to manage raw Kaspa script by hand. For multi-contract and multi-app covenant systems, [Argent](./argent) builds directly on top of Silverscript and compiles down to plain, auditable `.sil` contracts.
 
-Silverscript is the normal authoring path for Toccata covenants. You write the state and transition policy. The compiler handles low-level stack encoding, ABI layout, state validation helpers, and the repetitive covenant plumbing.
+Silverscript is released for production use via crates.io (`silverscript-lang`, `silverscript-abi`, `silverscript-cli-debugger`) and the [latest Silverscript release](https://github.com/kaspanet/silverscript/releases/latest).
 
-> [!IMPORTANT]
-> Silverscript is still moving toward its audited release interface. Treat it as the intended covenant authoring direction, but check the repo and release notes before shipping production value.
+## Per-UTXO state in Silverscript
 
-## State becomes the current script
-
-Start with a small vault.
+Start with a scheduled-withdrawal KAS vault that releases at most `max_withdraw` sompi per interval and advances `next_unlock` on every withdrawal:
 
 ```js
 pragma silverscript ^0.1.0;
 
-contract Vault(pubkey owner, int unlock_time, int init_amount) {
-    int amount = init_amount;
+contract Vault(pubkey pk, temporal interval, int max_withdraw, temporal init_next_unlock) {
+    temporal next_unlock = init_next_unlock;            // <- per-UTXO state field
 
-    entrypoint function spend(sig owner_sig) {
-        require(tx.time >= unlock_time);
-        require(checkSig(owner_sig, owner));
+    entry withdraw(sig s, int amount) {
+        require(tx.time >= next_unlock);                // unlock time reached
+        require(amount > 0 && amount <= max_withdraw);  // within withdrawal cap
+        require(checkSig(s, pk));                       // owner authorization
+        require(tx.outputs[0].value == tx.inputs[this.activeInputIndex].value - amount); // keep remaining KAS
+
+        State next_state = State { next_unlock: next_unlock + interval };   // advance unlock slot
+        validateOutputState(0, next_state);                                 // enforce successor output
     }
 }
 ```
 
-In an account-contract language, `amount` might feel like a storage slot. In a Toccata covenant, it is closer to a constant in the current redeem-script preimage.
+When writing Silverscript, think of contract fields (`next_unlock`) as **per-UTXO storage slots**. At the compiler level, all constructor arguments supply compile-time values when `silverc` builds the contract artifact:
 
-The live UTXO commits to the script. The script preimage pushes the current state. The spend reveals that preimage. The next output must commit to the next script preimage.
+- Arguments referenced inside contract logic (`pk`, `interval`, `max_withdraw`) are baked into the contract template body and stay fixed for that compiled template.
+- State fields (`next_unlock`) live in the leading **state prefix** described by the compiled ABI artifact. An argument used only to initialize a state field (`init_next_unlock`) sets its initial value; once compiled, tooling can instantiate or update state fields in that prefix **without recompiling**.
 
-Silverscript exists so the developer can mostly write:
+Notice that this vault uses a plain `entry` and `validateOutputState(0, next_state)` with **no [KIP-20 covenant ID](./covenant-state#covenant-ids)**. Because native KAS scarcity is already enforced by L1 consensus, someone cloning the same script over their own KAS cannot affect your vault. You only need KIP-20 covenant IDs when managing scarce application-level resources outside KAS consensus (such as tokens, tickets, or protocol registries).
+
+Technically, there is no mutable storage inside a Kaspa node: each state field is encoded in the current UTXO's redeem-script preimage, and `validateOutputState` checks that output `0` commits to the same contract template with the updated state prefix (see [Covenant State](./covenant-state)).
+
+Silverscript lets you focus on:
 
 ```text
 old state + arguments + transaction facts -> allowed new state
@@ -43,11 +50,15 @@ instead of manually assembling:
 stack layout + introspection opcodes + P2SH reconstruction + covenant bindings
 ```
 
-## Transaction facts without raw stack work
+## Language highlights
 
-Covenants need to read the transaction they are inside.
+Silverscript provides the typed primitives needed for safe covenant authoring:
 
-Silverscript exposes that through high-level transaction objects and opcode-like helpers.
+- **Entrypoints and dispatch tags:** Public spend paths use the `entry` keyword and compile to deterministic 4-byte BLAKE3 signature-based dispatch tags (`DispatchTag`), aligned with KCC-1.
+- **Separate time and DAA lock domains:** Wall-clock locks (`tx.time`) require the `temporal` type (Unix milliseconds), while absolute and relative DAA locks (`tx.daa`, `this.ageDaa`) take `int` — preventing accidental mixing of timestamps and DAA scores.
+- **Signatures and hashing:** `checkSig`, `checkSigEcdsa`, `checkMsgSig`, `checkMsgSigEcdsa`, `blake3`, `blake3WithKey`, `blake2b`, `blake2bWithKey`, `sha256`, and BLAKE3 `templateHash`.
+- **Explicit conversions:** Fixed-width byte casts (`x as byte[N]`), `bool as int`, and explicit `signed(byte)` / `unsigned(byte)` conversions.
+- **Transaction introspection:** High-level transaction fields alongside covenant opcodes:
 
 ```js
 require(tx.outputs[0].value == tx.inputs[this.activeInputIndex].value);
@@ -57,37 +68,41 @@ int in_count = OpCovInputCount(cov_id);
 int out_idx = OpAuthOutputIdx(this.activeInputIndex, 0);
 ```
 
-This narrows the review surface. Reviewers can ask "which outputs are validated?" rather than reverse-engineering raw stack choreography.
-
 ## Covenant macros
 
-The hard part of a covenant is rarely the arithmetic. It is the transaction layout.
+When a contract manages scarce application-level resources outside KAS consensus — such as fungible tokens, tickets, or shared protocol state — you need KIP-20 covenant IDs so nobody can mint counterfeit UTXOs with forged initial state, alongside consistent transaction-layout checks across inputs and outputs.
 
-Silverscript covenant declarations let the developer say what kind of transition this is, then let the compiler generate the wrapper.
+Silverscript covenant declarations automate that boilerplate for **a single contract template under one KIP-20 covenant ID**.
+
+> [!NOTE]
+> **Why macros assume one template per covenant ID:** Generated `binding = cov` wrappers locate peer inputs via `OpCovInputIdx(cov_id, k)` and read their state without checking peer templates. Safety relies on induction from genesis via `covenant_id`: every UTXO under that ID must share the same contract template (and macros always require covenant IDs even when a contract would not strictly need one). For multiple cooperating templates under one covenant ID, use [Argent](./argent).
+
+Declare the transition policy and let the compiler generate the surrounding wrapper:
 
 ```js
-contract Token(int max_ins, int max_outs, int init_amount, byte[32] init_owner) {
+contract Token(int max_ins, int max_outs, int init_amount, pubkey init_owner) {
     int amount = init_amount;
-    byte[32] owner = init_owner;
+    pubkey owner = init_owner;
 
     #[covenant(binding = cov, from = max_ins, to = max_outs)]
-    function transfer(State[] prev_states, State[] new_states, sig[] sigs) {
-        int total_in = 0;
-        for(i, 0, prev_states.length, max_ins) {
-            total_in = total_in + prev_states[i].amount;
-        }
+    function transfer(State[] prev, State[] next, sig s) {
+        require(checkSig(s, owner)); // authorize leader input
 
-        int total_out = 0;
-        for(i, 0, new_states.length, max_outs) {
-            total_out = total_out + new_states[i].amount;
+        int sum = 0;
+        for(i, 0, prev.length, max_ins) { sum = sum + prev[i].amount; }
+        for(i, 0, next.length, max_outs) {
+            require(next[i].amount > 0);
+            sum = sum - next[i].amount;
         }
-
-        require(total_in == total_out);
+        require(sum == 0);
     }
+
+    #[covenant.delegate]
+    function auth_delegate(sig s) { require(checkSig(s, owner)); } // authorize each delegate
 }
 ```
 
-The policy says conservation. The macro says how the surrounding transaction is organized.
+The policy enforces conservation; the macro generates the surrounding covenant group checks, leader/delegate entrypoints, and successor output validation.
 
 ```mermaid
 flowchart LR
@@ -103,29 +118,36 @@ flowchart LR
     P --> M --> W --> V
 ```
 
-Generated covenant wrappers should be consistent. The same leader/delegate and output-validation patterns should appear the same way across contracts.
+Shorthand aliases cover common topologies:
+
+- `#[covenant.singleton]` — equivalent to `#[covenant(from = 1, to = 1)]`
+- `#[covenant.fanout(to = Y)]` — equivalent to `#[covenant(from = 1, to = Y)]`
+- `#[covenant.delegate]` — defines the shared authorization body for delegate inputs in a `binding = cov` leader contract
+- `#[covenant.allow(rule = manual_entrypoint_in_leader_contract)]` — explicit opt-in when adding a handwritten `entry` alongside `binding = cov` declarations
+
+See [`DECL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/DECL.md) for the complete covenant declaration specification.
 
 ## Auth binding and cov binding
 
 Two transaction views come up constantly.
 
-Use **auth binding** when the active input authorizes its own successors.
+Use **auth binding** (`binding = auth`, default when `from == 1`) when the active input authorizes its own successors:
 
 ```js
-#[covenant(binding = auth, from = 1, to = max_outs)]
+#[covenant.fanout(to = max_outs)]
 function split(State prev_state, State[] new_states) {
     require(new_states.length > 0);
 }
 ```
 
-The generated code can focus on:
+The generated code inspects:
 
 ```text
 OpAuthOutputCount(active_input)
 OpAuthOutputIdx(active_input, k)
 ```
 
-Use **cov binding** when a transition spans inputs and outputs sharing the same covenant id.
+Use **cov binding** (`binding = cov`, default when `from > 1`) when a transition spans multiple inputs and outputs sharing the same covenant ID:
 
 ```js
 #[covenant(binding = cov, from = max_ins, to = max_outs)]
@@ -134,7 +156,7 @@ function merge(State[] prev_states, State[] new_states) {
 }
 ```
 
-The generated code needs the shared covenant context:
+The generated code inspects the shared covenant context:
 
 ```text
 OpInputCovenantId(active_input)
@@ -144,11 +166,11 @@ OpCovOutputCount(cov_id)
 OpCovOutputIdx(cov_id, k)
 ```
 
-Auth binding is about "what did this input authorize?" Cov binding is about "what belongs to this covenant family in this transaction?"
+Auth binding asks _"what did this input authorize?"_ Cov binding asks _"what belongs to this covenant family in this transaction?"_
 
 ## Leader and delegate lowering
 
-For many-input transitions, one input usually leads.
+For many-input transitions, one input leads while peers delegate:
 
 ```mermaid
 sequenceDiagram
@@ -162,21 +184,14 @@ sequenceDiagram
     D->>L: verify leader and shared transition
 ```
 
-The leader does the expensive work: reading states, running the policy, and validating outputs. Delegates verify that a valid leader exists and that they are not being pulled into the wrong transition.
-
-This pattern is easy to get subtly wrong by hand. It is much easier to review when generated consistently.
+The leader does the heavy work: reading peer states, running the policy, and validating successor outputs. Delegates verify their own authorization (via `#[covenant.delegate]`) and confirm that a valid leader is taking responsibility for the transition.
 
 ## Foreign templates
 
-Multi-contract apps need one contract to validate another contract's state.
+Multi-contract apps need one contract to read or validate another contract's state. Silverscript exposes template-aware state builtins for that pattern:
 
-The common construction is:
-
-```text
-template prefix + state bytes + template suffix
-```
-
-Silverscript has template-aware helpers for that pattern:
+- `readInputState` and `readInputStateWithTemplate`
+- `validateOutputState`, `validateOutputStateWithTemplate`, and `validateOutputStateWithInputTemplate`
 
 ```js
 validateOutputStateWithTemplate(
@@ -188,64 +203,55 @@ validateOutputStateWithTemplate(
 );
 ```
 
-The script verifies that the output state is encoded under the expected template, not merely that some output exists.
-
-That is the bridge from one-contract covenants to contract families.
+Each check verifies that the output state is encoded under the expected template (`template prefix + state bytes + template suffix`), not merely that some output exists. When an application grows beyond one or two templates, [Argent](./argent) automates this routing and lowers directly to plain Silverscript using these builtins.
 
 ## Covenant-native ownership
 
-Toccata ownership does not have to mean "a public key signed."
+Toccata ownership is not limited to public-key signatures. Standardized under [KCC-2](https://github.com/kaspanet/kccs/blob/main/kcc-0002.md) (Final), covenants can accept five canonical authority schemes:
 
-A KCC20-like pattern can accept different owner identifiers:
+| Byte   | Scheme             | How authorization is verified                                      |
+| ------ | ------------------ | ------------------------------------------------------------------ |
+| `0x00` | `p2pk-schnorr/v1`  | Schnorr signature directly against the 32-byte pubkey              |
+| `0x01` | `p2pkh-schnorr/v1` | Reveal pubkey matching `BLAKE3(pubkey)` + Schnorr signature        |
+| `0x02` | `p2pkh-ecdsa/v1`   | Reveal 33-byte compressed pubkey matching `BLAKE3(pubkey)` + ECDSA |
+| `0x03` | `p2sh/v1`          | Co-spent input whose script public key matches the BLAKE2b P2SH    |
+| `0x04` | `covenant-id/v1`   | Co-spent input carrying the authenticated KIP-20 `covenant_id`     |
 
-```js
-if(prev_states[i].identifierType == IDENTIFIER_PUBKEY) {
-    require(checkSig(sigs[i], prev_states[i].ownerIdentifier));
-} else if(prev_states[i].identifierType == IDENTIFIER_SCRIPT_HASH) {
-    byte[] spk = new ScriptPubKeyP2SH(prev_states[i].ownerIdentifier);
-    require(tx.inputs[witnesses[i]].scriptPubKey == spk);
-} else if(prev_states[i].identifierType == IDENTIFIER_COVENANT_ID) {
-    require(OpInputCovenantId(witnesses[i]) == prev_states[i].ownerIdentifier);
-} else {
-    require(false);
-}
-```
-
-The covenant-id branch is the key point. A covenant can own something as a covenant, not only through a key. That is where UTXO-native composition differs from account-style composition.
+The `covenant-id/v1` scheme is key to UTXO-native composability: a covenant can own tokens or assets as a covenant identity, allowing atomic cross-covenant flows without keys.
 
 ## ZK verification builtins
 
 Silverscript exposes direct Groth16 verification through `g16.verify` (generic BN254 Groth16, unaffected by the RISC Zero advisory) and `r0.g16.verify` (updated in Silverscript `v1.0.2` to `kaspa-txscript-zk-sdk 2.2.0` / `RISC Zero 3.1.0`). The native STARK builtin `r0.succinct.verify` is disabled at compile time in `v1.0.2` due to [GHSA-g6qg-9j8p-7j87](https://github.com/risc0/risc0/security/advisories/GHSA-g6qg-9j8p-7j87); see [Inline ZK](./inline-zk#risc-zero-advisory-and-remediation).
 
-## Tooling
+## Tooling and workflow
 
-The current workspace includes:
+The [`kaspanet/silverscript`](https://github.com/kaspanet/silverscript) workspace provides:
 
-- `silverc`, the compiler;
-- Rust compilation APIs;
-- `build_sig_script` support for entrypoint ABI;
-- a source-level debugger;
-- tests and covenant declaration fixtures.
+- **`silverc`** (`silverscript-lang`): compiles `.sil` contracts to portable JSON artifacts (`--constructor-args`, `-o FILE.json`, `-c/--stdout`, `--ast-only`).
+- **`silverscript-abi`**: portable ABI schema v1 (`SIL_ABI_SCHEMA_VERSION = 1`), codecs, `DispatchTag`, `ArtifactValue`, and `check_consistency()` validation.
+- **`silverscript-cli-debugger`** (`debugger/cli` + `debugger/session`): interactive and `.test.json` batch source-level debugger.
+- **Editor support**: `silverscript-tree-sitter` grammar plus extensions for VS Code, Zed, and Neovim under `extensions/`.
+- **Guides**: [`TUTORIAL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/TUTORIAL.md), [`DECL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/DECL.md), [`CONSTRUCTOR_ARGS.md`](https://github.com/kaspanet/silverscript/blob/master/docs/CONSTRUCTOR_ARGS.md), and the hosted [Fungible Token Book](https://kaspanet.github.io/silverscript/fungible-token-book/).
 
 Useful local commands:
 
 ```bash
 cargo test -p silverscript-lang
-cargo run -p cli-debugger -- silverscript-lang/tests/examples/if_statement.sil --function hello
+cargo run -p silverscript-lang --bin silverc -- contract.sil -o artifact.json
+cargo run -p silverscript-cli-debugger -- \
+  silverscript-lang/tests/examples/if_statement.sil \
+  --function hello --ctor-arg 3 --ctor-arg 10 --arg 1 --arg 2
 ```
 
 ## What to tell an agent
 
-When using coding agents, give them the covenant design before asking for code.
+When using coding agents for Silverscript contracts, give them the covenant design before asking for code:
 
-Tell them:
-
-- use Silverscript unless raw script is explicitly needed;
-- identify whether the transition is `1:1`, `1:N`, `N:M`, leader/delegate, or multi-contract;
+- inspect the [latest Silverscript release](https://github.com/kaspanet/silverscript/releases/latest) / `silverscript-lang` crate and docs for exact language syntax;
+- identify whether the transition is `1:1`, `1:N`, `N:M`, leader/delegate, or multi-contract (and consider [Argent](./argent) once multiple templates interact);
 - validate successor outputs, not only old inputs;
-- use covenant IDs for lineage, but do not confuse them with transition validation;
-- keep state small enough for script limits and transaction mass;
-- use template-aware helpers for foreign contract state;
-- assume a single global mutable UTXO is a bottleneck unless the app can tolerate it.
+- use covenant IDs for lineage, without confusing them with transition validation;
+- use `g16.verify` / `r0.g16.verify` for ZK checks — never deprecated `r0.succinct.verify`;
+- keep state small enough for script limits and transaction mass.
 
-Continue with [Argent](./argent) for multi-contract source and route lowering.
+Continue with [Argent](./argent) for multi-contract actors, inter-covenant communication, and launch proofs.

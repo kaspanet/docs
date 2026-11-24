@@ -1,201 +1,204 @@
 ---
 title: Argent
-description: "The experimental actor-style direction for writing multi-contract Toccata covenant systems."
+description: "The actor-based language, compiler, and runtime above Silverscript for multi-contract and multi-app Toccata covenant systems."
 ---
 
-Argent is not a third road beside covenants and based apps.
+Argent is an actor-based language, compiler, and runtime built on top of [Silverscript](./silverscript) for building stateful, multi-contract, and multi-app covenant systems on Kaspa L1.
 
-It is a prototype for the next layer above Silverscript: write a multi-contract covenant system as actors, roles, routes, and typed transitions; lower it into explicit Silverscript and then Kaspa script.
+Applications are expressed as transaction-wide state transitions over covenant UTXOs. Actors own typed state, entries declare which actors they consume, emit, or observe, and `become` binds the successor actors created in one atomic transaction. Inter-Covenant Communication (ICC) extends the same model across independently compiled apps.
 
 ```text
-Argent source -> generated Silverscript -> Kaspa script
+.ag source
+    |
+    v
+Argent compiler (argentc)
+    |
+    +-- plain, auditable .sil contracts  -->  Silverscript  -->  Kaspa Script
+    |
+    +-- portable artifact.json
+              |
+              v
+       argent-runtime (TxBuilder / ArtifactBundle)
+              |
+              v
+   atomic multi-actor Kaspa transaction
 ```
 
-The analogy is `async` lowering into a state machine. The developer writes the compact source form. The compiler expands it into the mechanical runtime representation: state fields, templates, routing checks, leader/delegate entrypoints, and successor validation.
+> [!IMPORTANT]
+> **Status and production audit path:** [`argent-lang/argent`](https://github.com/argent-lang/argent) is under active development and still needs further audit and hardening before unreviewed general production use. However, because **Silverscript is released for production** and Argent compiles each actor into **plain, auditable `.sil` contracts**, builders are already using Argent for real applications by directly inspecting, testing, and auditing the generated `.sil` layer. This is the exact workflow used for the [KCC-20 reference implementation](https://github.com/argent-lang/kcc20-reference).
 
-> [!WARNING]
-> Argent is evolving quickly. Treat [argent-lang/argent](https://github.com/argent-lang/argent) carefully and verify release/audit status before shipping production value.
+## Why Argent exists
 
-## The problem it points at
+Hand-written multi-contract covenant systems quickly accumulate mechanical, error-prone plumbing:
 
-Silverscript can express multi-contract covenant systems. The difficult part is keeping the route plumbing correct.
+- state serialization and hidden ABI fields;
+- template hashes and route-commitment proofs;
+- prefix/suffix witnesses for foreign templates;
+- leader/delegate input-group checks and exact output ordering;
+- cross-covenant observation and co-spend validation;
+- launch proofs and runtime transaction-builder metadata.
 
-A contract family needs to know:
+Argent lifts that application graph into source syntax. The compiler checks the declared state-machine edges, lowers each actor into a plain `.sil` contract (using Silverscript's AST APIs directly), and emits a portable `artifact.json` containing the runtime recipe for constructing valid transactions.
 
-- which roles exist;
-- which templates identify those roles;
-- which states can transition into which other states;
-- which peer inputs are allowed in the same transaction;
-- which outputs each entrypoint may authorize;
-- which hidden ABI fields must be preserved;
-- what launch proof an indexer or auditor needs.
+## The actor mental model
 
-That is too much to leave as copy-pasted convention forever.
+Argent actors are **not** async actors with mailboxes or message queues. They are **covenant UTXOs that get consumed and recreated by transactions**. The shared idea with actor models is state ownership: an actor's contract code is the sole authority that can consume and mutate that actor's state.
 
-## Source model
-
-Argent prototypes use app-level declarations for actor families.
+A minimal two-actor app from the Argent README shows the whole loop:
 
 ```rust
-app Stones {
-    actor League;
-    actor Player;
-    actor StonesGame;
-    actor StonesSettle;
+state EventState {
+    int remaining_tickets;
+    int price;
+}
+
+state TicketState {
+    byte[32] owner;
+}
+
+actor Event owns EventState {
+    entry buy(byte[32] buyer)
+    // `emits` declares the complete authorized actor-output shape for this entry.
+    emits {
+        event: Event,
+        ticket: Ticket,
+    } {
+        require(remaining_tickets > 0);
+
+        // Every emitted output's KAS value must be constrained or explicitly unrestricted.
+        require(event.value == self.value + price);
+        unrestricted(ticket.value);
+
+        EventState next_event = {
+            remaining_tickets: remaining_tickets - 1,
+            price: price,
+        };
+        TicketState new_ticket = { owner: buyer };
+
+        // `become` binds each emitted handle to its successor actor and state.
+        become {
+            event <- Event(next_event),
+            ticket <- Ticket(new_ticket),
+        };
+    }
+}
+
+actor Ticket owns TicketState {
+    entry transfer(byte[32] next_owner, sig owner_sig, pubkey owner_pk) emits next: Ticket {
+        require(blake2b(byte[](owner_pk)) == owner);
+        require(checkSig(owner_sig, owner_pk));
+        unrestricted(next.value);
+        TicketState new_state = { owner: next_owner };
+        become next <- Ticket(new_state);
+    }
+}
+
+// An app defines a closed actor family sharing a covenant boundary.
+app Tickets {
+    actor Event;
+    actor Ticket;
 }
 ```
 
-The vocabulary is actor-oriented:
+One `Event::buy` transaction advances `Event` and creates an independently owned `Ticket`. Later transactions transfer that `Ticket` in parallel without touching `Event`.
 
-| Term       | Meaning                                        |
-| ---------- | ---------------------------------------------- |
-| `app`      | a closed actor/template family                 |
-| `state`    | reusable covenant state layout                 |
-| `actor`    | a contract template with persistent state      |
-| `entry`    | a leader transition                            |
-| `delegate` | a non-leader verification path                 |
-| `consumes` | peer actors consumed in the same transaction   |
-| `emits`    | named authorized outputs                       |
-| `become`   | terminal transition into successor actor state |
+## Core vocabulary
 
-The output should still be ordinary covenant code. Argent's job is to make the family-level intent explicit before lowering.
+| Keyword / construct   | Meaning                                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| `state`               | Reusable persistent covenant state layout                                                       |
+| `actor ... owns ...`  | Contract template owning a typed state layout                                                   |
+| `entry`               | Callable leader transition path                                                                 |
+| `delegate`            | Non-leading verification path in a coordinated multi-input transition                           |
+| `consumes`            | Peer covenant inputs consumed in the same transaction (supports bounded ranges)                 |
+| `emits`               | Authorized output handles created by the entry (supports bounded ranges)                        |
+| `become`              | Terminal binding of emitted handles to successor actors and next states                         |
+| `observes`            | Declares a foreign covenant view for Inter-Covenant Communication (ICC)                         |
+| `spawns`              | Declares a constrained genesis covenant output group and binds its derived KIP-20 `covenant_id` |
+| `actor enum`          | Closed set of runtime-selected actor targets within an app                                      |
+| `actor_type<State>`   | Runtime or statically linked handle identifying an actor implementation compatible with `State` |
+| `virtual` / `expands` | Digest-backed state slots expanded into concrete structured fields on demand                    |
+| `app`                 | Closed actor set defining one covenant family                                                   |
 
-## A multi-actor flow
+## Route planning and compiler invariants
 
-Stones is a contract family, not a single contract.
+Inside a multi-actor covenant family, a shared KIP-20 `covenant_id` proves family membership, not actor role. Argent derives template commitments automatically from the app's route graph so each actor commits in advance to every successor actor it is allowed to create:
 
-```mermaid
-flowchart TB
-    classDef root fill:#eef6ff,stroke:#4b82c3,color:#172033
-    classDef player fill:#eef9ef,stroke:#4d9f5b,color:#132016
-    classDef game fill:#fff7e8,stroke:#c58b2a,color:#1f1b12
+- **Same-actor continuations:** Use cheaper exact-template checks and embed current-actor template lengths directly (keeping standard ABIs such as KCC-20 free of extra hidden arguments).
+- **Foreign and dynamic transitions:** Use template prefix/suffix witnesses or route-family commitment tables, with automatic inactive template witness pruning in `TxBuilder`.
+- **Template-frame identity disjointness:** Enforced across actor frames at compile, runtime load, inspect, and link time so two actors cannot collide ambiguously.
+- **Leader/delegate input-group rules:** Generated wrappers enforce exact consume coverage and leader continuation closure so delegates cannot be dragged into unintended transitions or authorize stray outputs.
 
-    L["League"]:::root
-    P1["Player A"]:::player
-    P2["Player B"]:::player
-    G["StonesGame"]:::game
-    S["StonesSettle"]:::game
+See Argent's [route planner](https://github.com/argent-lang/argent/blob/master/docs/route-planner.md) and [security invariants](https://github.com/argent-lang/argent/tree/master/docs/security-invariants) docs for the formal rules.
 
-    L -->|"register"| P1
-    L -->|"register"| P2
-    P1 -->|"start_game with P2"| G
-    G -->|"play"| G
-    G -->|"terminal"| S
-    S -->|"settle"| P1
-    S -->|"settle"| P2
+> [!NOTE]
+> **Covenant ⊆ app (why every Argent `app` uses a KIP-20 covenant ID):** Think of each live KIP-20 covenant (`covenant_id`) as a single instance bounded by one Argent `app`: every UTXO carrying that ID comes from the `app`'s closed actor set, separate deployments get separate `covenant_id`s, and larger protocols compose multiple `app`s through ICC. While a simple single-input KAS script can rely on native KAS conservation alone, multi-actor coordination needs `covenant_id` for both **mutable-peer identity** (preventing forged stateful peer UTXOs) and **transaction scoping** (`OpCov*` / `OpAuth*` isolate the covenant's inputs and outputs inside composed transactions), while giving one uniform anchor for cross-app ICC and `argent-genesis` launch proofs.
+
+## Inter-Covenant Communication (ICC)
+
+Real Kaspa applications rarely live in a single covenant family — for example, a DEX interacting with independent token covenants, or a prediction market minting tradable KCC-20 outcome shares. Argent models cross-app atomic co-spends directly through `observes` and `.co_spent()`:
+
+- **Closed ICC:** Link against a compiled dependency app's artifact (`ArtifactBundle` pins exact dependency artifact IDs so mismatched builds are rejected before transaction construction). Statically linked foreign actors can be passed as `byte[32]` `actor_type<State>` handle constants while preserving nominal state identity.
+- **Open ICC:** Observe an abstract/virtual state interface (`state X expands Base`) bound dynamically at runtime — allowing protocols such as a DEX pair or registry to interoperate with any conforming asset capsule without recompiling.
+- **Constrained genesis spawns:** An entry can `spawns` a new local or linked foreign covenant family and bind its consensus-derived `covenant_id` atomically inside the transaction.
+
+See [ICC semantics](https://github.com/argent-lang/argent/blob/master/docs/icc-semantics.md) for details.
+
+## Tooling, runtime, and genesis proofs
+
+The [`argent-lang/argent`](https://github.com/argent-lang/argent) workspace ships four core pieces:
+
+- **`argentc` (compiler CLI):** Compiles `.ag` apps into `sil/*.sil`, `artifact.json`, and `manifest.json`, and inspects compiled artifacts without rebuilding:
+
+```bash
+argentc build app.ag --out build/app
+argentc inspect build/app
 ```
 
-The generated code has to preserve role identity across changing P2SH state. A shared covenant id can say "same family." It cannot by itself say "this input is a Player and that output is a Game." Template validation carries the role identity.
+`argentc inspect` reports per-actor script, state, and template sizes, static opcode counts, entry arguments, generated witnesses, route metadata, and signature-script size estimates.
 
-## Hidden ABI state
+- **`argent-artifact`:** Portable artifact format wrapping upstream `silverscript-abi` alongside coordination, routing, dependency IDs, and witness recipes (`Artifact::verify()`).
+- **`argent-runtime`:** Consumes `artifact.json` through `TxBuilder`, `TxContext`, `EntryCall`, and `ArtifactBundle` to construct atomic multi-actor and multi-app Kaspa v1 transactions.
+- **`argent-genesis` (launch proofs):** Because a live covenant UTXO only exposes a P2SH hash and a KIP-20 `covenant_id`, wallets, indexers, and auditors need a way to verify _which_ app and initial actor states created that covenant ID. Argent provides a 3-layer verifiable proof stack (`ConsensusGenesisProof` → `SilGenesisProof` → `ArgentGenesisProof`):
 
-Generated Silverscript may carry fields that are not business state.
-
-```text
-template_league
-template_player
-template_stones_game
-template_stones_settle
+```bash
+argentc genesis compose app.ag --bootstrap genesis.json --out proof.json
+argentc genesis verify proof.json --covenant-id <node-provided-id> --source app.ag
 ```
 
-Those fields are route-safety state. Ordinary transitions preserve them so later outputs can be validated under the right templates.
+See [Genesis proof tooling](https://github.com/argent-lang/argent/blob/master/docs/genesis-proof-tooling.md).
 
-That is the kind of data a developer should not hand-maintain in every transition if a compiler can preserve it.
+## Auditing generated Silverscript
 
-## Route commitments
+When preparing an Argent application for mainnet today, treat the generated `.sil` files as the contract artifact under audit:
 
-Small apps can carry explicit template data. Larger apps probably need route commitments.
+1. Commit pinned `sil/*.sil`, `artifact.json`, and `manifest.json` fixtures in Git so compiler or contract changes show up directly in code review.
+2. Review every generated `.sil` entrypoint for output-value constraints, covenant-group boundaries, authorization paths, and termination rules.
+3. Run direct VM tests (encoding transactions directly without trusting a builder to mask malformed cardinalities, role selections, or witnesses) alongside ABI regression tests.
 
-The pattern:
+## Ecosystem and examples
 
-```text
-hidden state: route_root
-entry witness: route leaf + Merkle branch + template prefix/suffix
-generated check: leaf belongs to route_root
-generated validation: validateOutputStateWithTemplate(...)
-```
+<Cards>
+  <Card
+    title="argent-lang/argent"
+    href="https://github.com/argent-lang/argent"
+    description="Core compiler (argentc), argent-artifact, argent-runtime, argent-genesis, and design docs."
+  />
+  <Card
+    title="argent-lang/argent-template"
+    href="https://github.com/argent-lang/argent-template"
+    description="Starter project template with local setup script, VS Code extension helper, and Event/Ticket tutorial."
+  />
+  <Card
+    title="argent-lang/argent-playground"
+    href="https://github.com/argent-lang/argent-playground"
+    description="Worked multi-actor and ICC demos including an open-ICC DEX, multi-app badges, and a 12-actor Chess Mux app."
+  />
+  <Card
+    title="argent-lang/kcc20-reference"
+    href="https://github.com/argent-lang/kcc20-reference"
+    description="KCC-20 fungible token reference implementation (KCC20, PublicMint, TokenSeed) with pinned .sil contracts and 22 conformance tests."
+  />
+</Cards>
 
-Commit early, expand late. Long-lived state carries a compact route commitment. The witness expands the route only when a transition needs it.
-
-## Same template and foreign template
-
-When an output continues the same template as the active input, the generated code can use the simpler same-script path:
-
-```text
-become self(next_state)
-  -> validateOutputState(output_idx, next_state)
-```
-
-When an output becomes another actor, the code needs a foreign-template check:
-
-```text
-become Player(next_player)
-  -> validateOutputStateWithTemplate(output_idx, next_player, prefix, suffix, player_template)
-```
-
-Peer input reads are also template-sensitive. Covenant grouping proves family membership. It does not automatically prove actor role.
-
-## Leader and delegate defaults
-
-A good default actor transition has one leader and small delegates.
-
-```mermaid
-sequenceDiagram
-    participant L as Leader actor input
-    participant D as Delegate actor input
-    participant O as Authorized outputs
-
-    L->>D: read peer state with template proof
-    L->>O: validate named successors
-    D->>L: verify leader and family/role
-```
-
-The leader reads peers and validates outputs. Delegates check that a valid leader is taking responsibility and that they are not authorizing stray outputs.
-
-This default leaves room for ordinary fee/change inputs and multiple auth groups in the same transaction.
-
-## Launch proofs
-
-Multi-contract apps need launch artifacts.
-
-An indexer or auditor should be able to reconstruct:
-
-- the covenant id genesis material;
-- template preimages;
-- hidden ABI state;
-- route commitments;
-- current UTXOs and actor roles;
-- transaction-builder context.
-
-This is one of the places Argent-like tooling becomes more than syntax. A generated app should come with the artifact needed to read it.
-
-## The compiler obligation
-
-Generated code should eventually enforce:
-
-- declared covenant input layout;
-- declared authorized output layout;
-- hidden ABI state preservation;
-- typed foreign input checks;
-- same-template shortcuts where sound;
-- route membership checks;
-- successor state validation;
-- no transition into an undeclared output route.
-
-Everything else should be ordinary app policy that a human can review.
-
-## How to use Argent today
-
-Use Argent as a design lens.
-
-It helps when:
-
-- one contract is not enough;
-- the app has distinct roles;
-- route safety is part of correctness;
-- launch proofs are needed for readers or auditors;
-- transaction builders become part of the protocol surface.
-
-For production covenant work today, start in Silverscript. Borrow Argent's way of thinking about roles, routes, and generated lowering.
-
-Use [Decision Guide](./decision-guide) when deciding whether a multi-contract covenant family is still the right architecture, or whether the app has crossed into based-app territory.
+Use [Decision Guide](./decision-guide) when deciding whether a multi-contract covenant family fits your application, or continue to [Inline ZK](./inline-zk) for proof verification inside covenants.
