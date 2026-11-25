@@ -15,16 +15,15 @@ flowchart TB
 
     subgraph TX["One atomic v1 transaction"]
         direction TB
-        IA["Input: Covenant A<br/>state_0 · covenant_id = A"]:::a
-        IB["Input: Covenant B<br/>state_0 · covenant_id = B"]:::b
-        PL["Shared tx.payload<br/>(readable by all inputs)"]:::tx
-        OA["Output(s): Covenant A<br/>state_1 · covenant_id = A"]:::a
-        OB["Output(s): Covenant B<br/>state_1 · covenant_id = B"]:::b
+        IA["Input: Covenant A<br/>state_0"]:::a
+        IB["Input: Covenant B<br/>state_0"]:::b
+        PL["Shared tx.payload<br/>readable by all inputs"]:::tx
+        OA["Output(s): Covenant A<br/>state_1"]:::a
+        OB["Output(s): Covenant B<br/>state_1"]:::b
 
         IA --> OA
         IB --> OB
-        IA -. "inspects B's bindings, state, or payload" .-> IB
-        IB -. "inspects A's bindings, state, or payload" .-> IA
+        IA <-.->|"mutual inspection"| IB
         IA -. "reads slice" .-> PL
         IB -. "reads slice" .-> PL
     end
