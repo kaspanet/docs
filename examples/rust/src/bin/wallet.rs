@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use kaspa_wallet_core::prelude::{
     kaspa_to_sompi, AccountKind, AccountsEstimateRequest, AccountsSendRequest, Address,
-    EncryptionKind, Events, PaymentOutputs, Secret, Wallet, WalletApi, WalletCreateArgs,
+    EncryptionKind, Events, Fees, PaymentOutputs, Secret, Wallet, WalletApi, WalletCreateArgs,
 };
 use kaspa_wrpc_client::{
     prelude::{NetworkId, NetworkType},

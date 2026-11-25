@@ -16,14 +16,12 @@ await wallet.accountsSend({
 });
 ```
 
-For standard mempool acceptance, the practical limit is about `25 KB` if the payload dominates the transaction.
+For mempool acceptance, the overall estimated serialized transaction size is capped at `250 KB` (`250,000` bytes).
 
-That comes from the transient-mass rule: standard transactions are capped at `100_000`, and transient mass is calculated as serialized transaction size times `4`.
-
-The exact ceiling is lower once the transaction also includes inputs, outputs, signatures, and other fields, because they all contribute to the same serialized size.
+The exact payload ceiling is lower once the transaction also includes inputs, outputs, signatures, and other fields, because they all count toward the same serialized size. Compute mass, storage mass, and minimum relay fee checks also still apply.
 
 ## Sources
 
-- [Mempool standard transaction limit (`100_000`)](https://github.com/kaspanet/rusty-kaspa/blob/master/mining/src/mempool/check_transaction_standard.rs#L38)
-- [Transient byte-to-mass factor (`4`)](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/constants.rs#L21)
-- [Transient mass calculation](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs#L248-L268)
+- [Mainnet `block_mass_limits` (`consensus/core/src/config/params.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/config/params.rs)
+- [Mempool `validate_transaction_limits_in_isolation` (`mining/src/mempool/check_transaction_limits.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/master/mining/src/mempool/check_transaction_limits.rs)
+- [Non-contextual mass `calc_non_contextual_masses` (`consensus/core/src/mass/mod.rs`)](https://github.com/kaspanet/rusty-kaspa/blob/master/consensus/core/src/mass/mod.rs)

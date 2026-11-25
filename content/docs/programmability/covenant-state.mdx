@@ -206,6 +206,9 @@ Toccata exposes both views.
 
 Each count/index pair acts like an iterator over the relevant subset: first ask how many entries exist, then ask for the `k`-th input or output index.
 
+> [!NOTE]
+> **Genesis outputs are excluded from auth and covenant output groups:** `OpAuthOutput*` and `OpCovOutput*` cover continuation outputs only; inspect genesis bindings directly with `OpOutputCovenantId` and `OpOutputAuthorizingInput`. To verify a full sub-app launch without scanning the whole transaction, a script can take the genesis output indices as witnesses, recompute the KIP-20 genesis `covenant_id` from its own outpoint plus those outputs, and check it against `OpOutputCovenantId` on the first output — hash collision resistance then proves the witnessed sequence is the exact, complete genesis group (the pattern behind Argent's [`spawns`](/programmability/argent#inter-covenant-communication-icc)).
+
 This supports transactions like:
 
 ```mermaid

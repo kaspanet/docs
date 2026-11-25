@@ -64,10 +64,9 @@ Create `src/main.rs`:
 use std::sync::Arc;
 use std::time::Duration;
 
-use kaspa_rpc_core::api::rpc::RpcApi;
 use kaspa_wrpc_client::{
     client::{ConnectOptions, ConnectStrategy},
-    prelude::{NetworkId, NetworkType},
+    prelude::{NetworkId, NetworkType, RpcApi},
     KaspaRpcClient, Resolver, WrpcEncoding,
 };
 

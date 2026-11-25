@@ -207,7 +207,7 @@ For payloads, the v1 txid uses the BLAKE3 `PayloadDigest`. The sighash uses the 
 | Field                               | txid                  | `tx::hash`        | sighash                      |
 | ----------------------------------- | --------------------- | ----------------- | ---------------------------- |
 | `version`                           | yes                   | yes               | yes                          |
-| input outpoint and sequence         | yes                   | yes               | yes                          |
+| input outpoint and sequence         | yes                   | yes               | yes, subject to sighash type |
 | input signature script              | empty placeholder     | yes               | no; signer signs spent SPK   |
 | v0 `sig_op_count`                   | not allowed in v1     | not allowed in v1 | not allowed in v1            |
 | v1 `compute_budget`                 | no                    | yes               | no                           |

@@ -1,17 +1,9 @@
-Generate Java gRPC sources and run the Java example:
+Generate Java gRPC sources and run the Java example (requires a local `gradle` installation):
 
 ```bash
 gradle -p ./java syncKaspaProto
 gradle -p ./java generateProto
 gradle -p ./java runGettingStarted
-```
-
-If `gradle` is not installed globally, use the wrapper instead:
-
-```bash
-./java/gradlew -p ./java syncKaspaProto
-./java/gradlew -p ./java generateProto
-./java/gradlew -p ./java runGettingStarted
 ```
 
 The example connects to a node and calls `GetBlockDagInfo`.
