@@ -19,7 +19,7 @@ contract Counter(int init_count, int max_step) {
     function increment(State prev_state, int step) : (State) {
         require(step > 0);
         require(step <= max_step);
-        return({ count: prev_state.count + step });
+        return(State { count: prev_state.count + step });
     }
 }
 ```
@@ -45,7 +45,7 @@ That is the core covenant move: compress, open, validate, recompress.
 The rest of Toccata exists around that loop: transaction fields for covenant outputs, opcodes for inspecting the current transaction, consensus lineage for covenant families, pricing for expensive work, and proof hooks for applications that should not run fully on L1.
 
 > [!IMPORTANT]
-> The consensus features described here are mainnet features. The developer tooling is younger. Silverscript is the main covenant authoring path and is approaching the interface developers should expect, but release and audit status still need attention. Argent and vprogs are earlier reference stacks. Expect periodic guide updates as those repos move.
+> The consensus features described here are mainnet features. **[Silverscript](https://github.com/kaspanet/silverscript/releases/latest)** is released for production use. **Argent** is under active development as the multi-contract actor layer above Silverscript, with an early production path for teams who directly inspect and audit the generated `.sil` contracts. **vprogs** / based-app tooling is earlier and has no production release yet.
 
 ## What Toccata adds
 
@@ -97,7 +97,7 @@ Use L1 covenants when the state transition is small enough, public enough, and l
 
 A single state UTXO is sequential. That does not make every covenant app sequential. When state can be partitioned into positions, games, vaults, tickets, orders, shards, or similar app objects, each object can live on its own UTXO track: the current covenant UTXO plus the successor UTXOs that continue it. Kaspa's high-frequency DAG gives those UTXOs room to advance in parallel, while the covenant family can still merge lineages or coordinate them through leader/delegate transitions.
 
-Silverscript is the intended authoring surface for L1 covenant apps. Argent is best understood as the next layer up: actor-style, multi-contract source that can lower into Silverscript the way `async` lowers into a more mechanical runtime representation.
+Silverscript is the production-released foundation for single-contract L1 covenants. Argent sits one layer above it: an actor-based language, compiler, and runtime for multi-contract and multi-app covenant systems that lowers `.ag` source into plain, auditable Silverscript contracts and portable runtime artifacts.
 
 Start with [Covenant State](/programmability/covenant-state).
 
@@ -206,9 +206,9 @@ If you are making an architecture call, read [Decision Guide](/programmability/d
 
 This guide uses present-tense language for Toccata consensus features because they are mainnet-active. Tooling status is different:
 
-- **Silverscript** is the primary higher-level covenant language. Treat it as the recommended covenant authoring direction while checking release and audit status.
-- **Argent** is an experimental actor-style frontend for multi-contract covenant apps. The likely long-term framing is that Argent-like constructs become the multi-contract precompilation layer of the Silverscript toolchain.
-- **vprogs** is an evolving Rust runtime for based computation and RISC Zero proving. Its repo is a source of patterns, not yet a stable external developer API.
+- **Silverscript** is released for production use as the single-contract covenant language, compiler, ABI, and debugger foundation (see the [latest release](https://github.com/kaspanet/silverscript/releases/latest)).
+- **Argent** is the actor-based multi-contract and multi-app layer above Silverscript. It is still under active development and needs further audit/hardening for general unreviewed use, but builders already ship with it by directly inspecting and auditing its generated `.sil` output.
+- **vprogs** is an evolving Rust runtime for based computation with no production release yet. Treat it as a reference stack rather than a frozen external SDK.
 
 ## Terms you will keep seeing
 

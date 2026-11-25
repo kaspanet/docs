@@ -39,8 +39,11 @@ When the guide and code disagree, follow the code and fix the guide.
 
 | Repo                                                                               | What it is                                                                         |
 | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [silverscript](https://github.com/kaspanet/silverscript)                           | higher-level covenant language, compiler, ABI, examples, debugger                  |
-| [argent](https://github.com/argent-lang/argent)                                    | multi-contract actor compiler, ICC, genesis proof tooling, and runtime             |
+| [silverscript](https://github.com/kaspanet/silverscript)                           | covenant language, `silverc`, `silverscript-abi`, debugger                         |
+| [argent](https://github.com/argent-lang/argent)                                    | actor-based multi-contract compiler (`argentc`), ICC, runtime, and genesis tooling |
+| [argent-template](https://github.com/argent-lang/argent-template)                  | starter Argent project template with setup script and Event/Ticket tutorial        |
+| [argent-playground](https://github.com/argent-lang/argent-playground)              | worked Argent multi-actor and ICC demos (open-ICC DEX, badges, Chess Mux)          |
+| [kcc20-reference](https://github.com/argent-lang/kcc20-reference)                  | KCC-20 fungible token reference in Argent with pinned `.sil` and conformance tests |
 | [vprogs](https://github.com/kaspanet/vprogs)                                       | evolving Rust framework and runtime for based computation                          |
 | [kaspa-r0-recursion-legacy](https://github.com/kaspanet/kaspa-r0-recursion-legacy) | legacy verifier-only RISC Zero `4.0.4` recursion crate for consensus compatibility |
 | [research](https://github.com/kaspanet/research)                                   | vProgs yellow paper and related research material                                  |
@@ -51,13 +54,16 @@ For covenant developers:
 
 - [Silverscript Tutorial](https://github.com/kaspanet/silverscript/blob/master/docs/TUTORIAL.md)
 - [Silverscript Covenant Declarations (`DECL.md`)](https://github.com/kaspanet/silverscript/blob/master/docs/DECL.md)
-- [Silverscript Fungible Token Book](https://github.com/kaspanet/silverscript/tree/master/docs/fungible-token-book)
+- [Silverscript Constructor Argument JSON](https://github.com/kaspanet/silverscript/blob/master/docs/CONSTRUCTOR_ARGS.md)
+- [Silverscript Fungible Token Book](https://kaspanet.github.io/silverscript/fungible-token-book/)
 
 For multi-contract covenant developers:
 
 - [Argent Design Doc](https://github.com/argent-lang/argent/blob/master/docs/argent-design.md)
+- [Argent Route Planner](https://github.com/argent-lang/argent/blob/master/docs/route-planner.md)
 - [Argent ICC Semantics](https://github.com/argent-lang/argent/blob/master/docs/icc-semantics.md)
 - [Argent Genesis Proof Tooling](https://github.com/argent-lang/argent/blob/master/docs/genesis-proof-tooling.md)
+- [Argent Security Invariants](https://github.com/argent-lang/argent/tree/master/docs/security-invariants)
 
 For based-app developers:
 

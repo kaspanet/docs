@@ -9,7 +9,7 @@ The goal is not to teach the agent everything. The goal is to stop it from impor
 
 ## The brief
 
-Toccata is Kaspa's mainnet programmability stack. It is UTXO-native, not account-native. An L1 covenant is a stateful UTXO whose spend validates its own successor output. State usually lives in a redeem-script preimage, while covenant IDs give stable lineage across changing P2SH hashes. Transaction v1 adds `compute_budget`, output covenant bindings, user lanes, gas, and a BLAKE3 payload/rest txid model. Based apps use ordinary v1 L1 payload transactions as ordered user operations, execute off-chain, and settle through ZK proofs verified by an L1 covenant. Use Silverscript for covenant source unless there is a reason not to. Treat Argent and vprogs as evolving stacks.
+Toccata is Kaspa's mainnet programmability stack. It is UTXO-native, not account-native. An L1 covenant is a stateful UTXO whose spend validates its own successor output. State usually lives in a redeem-script preimage, while covenant IDs give stable lineage across changing P2SH hashes. Transaction v1 adds `compute_budget`, output covenant bindings, user lanes, gas, and a BLAKE3 payload/rest txid model. Based apps use ordinary v1 L1 payload transactions as ordered user operations, execute off-chain, and settle through ZK proofs verified by an L1 covenant. Use Silverscript (targeting the latest `silverscript-lang` crate / release) for single-contract covenants and Argent (auditing its generated `.sil` output) for multi-contract or multi-app actor systems. Treat vprogs / based-app tooling as an evolving pre-release stack.
 
 ## Reading order
 
@@ -41,7 +41,9 @@ For based-app work:
 - User-lane based-app operations are ordinary v1 L1 transactions with payload and lane id.
 - A user-lane subnetwork ID is `[namespace: 4 bytes, 0x00 * 16]`; `[x, 0x00 * 19]` forms are reserved system IDs except native and coinbase.
 - KIP-21 lanes let app proofs focus on lane activity instead of total DAG activity. Do not use the word "lane" to describe parallel UTXOs.
-- Silverscript, Argent, and vprogs APIs may move. Check the repo before writing production code.
+- Inspect the [latest Silverscript release](https://github.com/kaspanet/silverscript/releases/latest) / `silverscript-lang` crate and its docs ([`TUTORIAL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/TUTORIAL.md), [`DECL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/DECL.md)) for exact language syntax.
+- Argent compiles `.ag` actors directly to plain `.sil` contracts; inspect the [`argent-lang/argent` docs](https://github.com/argent-lang/argent/tree/master/docs) for exact language and runtime details, and inspect and test the generated `.sil` files directly for production use.
+- Argent and vprogs APIs may still evolve. Check the repo before writing production code.
 
 ## Prompt for covenant work
 
@@ -113,13 +115,13 @@ Ask the agent to answer these before implementation:
 
 ## Repo map
 
-| Repo           | Use                                                                |
-| -------------- | ------------------------------------------------------------------ |
-| `rusty-kaspa`  | consensus, transaction v1, hashing, script engine, pricing, KIP-21 |
-| `kips`         | KIPs 16, 17, 20, 21, 24, 25                                        |
-| `silverscript` | covenant language, examples, macros, debugger                      |
-| `argent`       | experimental multi-contract actor frontend                         |
-| `vprogs`       | based-app runtime and RISC Zero proving pipeline                   |
-| `docs`         | rendered MDX docs                                                  |
+| Repo           | Use                                                                     |
+| -------------- | ----------------------------------------------------------------------- |
+| `rusty-kaspa`  | consensus, transaction v1, hashing, script engine, pricing, KIP-21      |
+| `kips`         | KIPs 16, 17, 20, 21, 24, 25                                             |
+| `silverscript` | covenant language, `silverc`, ABI, macros, debugger                     |
+| `argent`       | multi-contract actor compiler (`argentc`), ICC, runtime, genesis proofs |
+| `vprogs`       | based-app runtime and RISC Zero proving pipeline                        |
+| `docs`         | rendered MDX docs                                                       |
 
 That short preflight usually saves more time than a long first implementation attempt.
