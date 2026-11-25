@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { Code, Lightbulb, type LucideIcon } from "lucide-react";
+import { Code, Lightbulb, Terminal, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 const PATTERN_SNIPPET_STATUS = {
@@ -7,8 +7,12 @@ const PATTERN_SNIPPET_STATUS = {
     badge: "Argent · Implemented",
     icon: Code,
   },
+  silverscript: {
+    badge: "Silverscript · L1 Opcodes",
+    icon: Terminal,
+  },
   prototype: {
-    badge: "L1 Pattern · Conceptual",
+    badge: "Argent · Proposed Syntax",
     icon: Lightbulb,
   },
 } as const;
