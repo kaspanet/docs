@@ -21,7 +21,8 @@ For covenant work:
 4. [Silverscript](./silverscript)
 5. [Argent](./argent)
 6. [Conventions (KCCs)](./kccs) and [KCC-20](./kccs/kcc20)
-7. [Decision Guide](./decision-guide)
+7. [Covenant Composability](./composability)
+8. [Decision Guide](./decision-guide)
 
 For based-app work:
 
@@ -37,6 +38,7 @@ For based-app work:
 - V1 `compute_budget` is committed by `tx::hash`, not by txid or v1 sighash.
 - V1 output covenant bindings are committed by txid and `tx::hash`, and by sighash when the output is covered.
 - Covenant ID controls covenant-family admission. The script still validates the transition.
+- Covenants compose through atomic co-spending in one transaction, not imperative calls; a co-spend presence check (`OpCovInputCount`) is not authorization scope unless both sides couple to the transition (see [Covenant Composability](./composability)).
 - A P2SH state covenant changes script public key when state changes.
 - `compute_budget * 10,000 + 9,999` is the v1 per-input script-unit allowance.
 - `OpZkPrecompile` tag `0x20` (generic BN254 Groth16) is active and unaffected; tag `0x21` (native RISC Zero STARK / `ZkTag::R0Succinct` / `r0.succinct.verify`) is **unsound and deprecated** per [GHSA-g6qg-9j8p-7j87](https://github.com/risc0/risc0/security/advisories/GHSA-g6qg-9j8p-7j87). Never generate new covenants or settlement scripts using `0x21`; for RISC Zero, use Groth16 (`0x20`) with `kaspa-txscript-zk-sdk >= 2.2.0`, Silverscript `>= 1.0.2` (`r0.g16.verify`), and `RISC Zero >= 3.1.0`.
