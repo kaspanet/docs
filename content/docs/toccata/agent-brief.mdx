@@ -37,7 +37,7 @@ For based-app work:
 - Covenant ID controls covenant-family admission. The script still validates the transition.
 - A P2SH state covenant changes script public key when state changes.
 - `compute_budget * 10,000 + 9,999` is the v1 per-input script-unit allowance.
-- `OpZkPrecompile` uses Groth16 tag `0x20` and RISC Zero Succinct tag `0x21`.
+- `OpZkPrecompile` tag `0x20` (generic BN254 Groth16) is active and unaffected; tag `0x21` (native RISC Zero STARK / `ZkTag::R0Succinct` / `r0.succinct.verify`) is **unsound and deprecated** per [GHSA-g6qg-9j8p-7j87](https://github.com/risc0/risc0/security/advisories/GHSA-g6qg-9j8p-7j87). Never generate new covenants or settlement scripts using `0x21`; for RISC Zero, use Groth16 (`0x20`) with `kaspa-txscript-zk-sdk >= 2.2.0`, SilverScript `>= 1.0.2` (`r0.g16.verify`), and `RISC Zero >= 3.1.0`.
 - User-lane based-app operations are ordinary v1 L1 transactions with payload and lane id.
 - A user-lane subnetwork ID is `[namespace: 4 bytes, 0x00 * 16]`; `[x, 0x00 * 19]` forms are reserved system IDs except native and coinbase.
 - KIP-21 lanes let app proofs focus on lane activity instead of total DAG activity. Do not use the word "lane" to describe parallel UTXOs.
@@ -80,7 +80,7 @@ Before coding, identify:
 - payload format
 - app state root
 - execution resources
-- proof mode: RISC Zero Succinct or Groth16 reduction
+- proof mode: Groth16 (`0x20`, e.g., RISC Zero >= 3.1.0 wrapped to Groth16 with `kaspa-txscript-zk-sdk >= 2.2.0`; do not use deprecated native STARK `0x21`)
 - settlement cadence
 - exit/permission output semantics
 - reorg and operator assumptions
@@ -88,16 +88,17 @@ Before coding, identify:
 
 ## Common failure modes
 
-| Agent move                                            | Correction                                                   |
-| ----------------------------------------------------- | ------------------------------------------------------------ |
-| Treats covenants like account contracts               | Model them as UTXO state transitions                         |
-| Assumes covenant ID enforces app rules                | Consensus controls entrance; script controls transition      |
-| Checks inputs but not successor outputs               | A covenant must validate the next output                     |
-| Signs or hashes `compute_budget` in the wrong context | V1 txid and v1 sighash exclude it; `tx::hash` includes it    |
-| Uses v0 txid logic for v1                             | V1 txid is BLAKE3 payload/rest                               |
-| Makes every based-app user op a covenant spend        | User ops are L1 payload transactions on a lane               |
-| Reaches for based apps too early                      | L1 covenants can scale when state splits into parallel UTXOs |
-| Forces covenants onto shared mutable app state        | Based apps exist for that architecture                       |
+| Agent move                                            | Correction                                                     |
+| ----------------------------------------------------- | -------------------------------------------------------------- |
+| Treats covenants like account contracts               | Model them as UTXO state transitions                           |
+| Assumes covenant ID enforces app rules                | Consensus controls entrance; script controls transition        |
+| Checks inputs but not successor outputs               | A covenant must validate the next output                       |
+| Signs or hashes `compute_budget` in the wrong context | V1 txid and v1 sighash exclude it; `tx::hash` includes it      |
+| Uses v0 txid logic for v1                             | V1 txid is BLAKE3 payload/rest                                 |
+| Makes every based-app user op a covenant spend        | User ops are L1 payload transactions on a lane                 |
+| Reaches for based apps too early                      | L1 covenants can scale when state splits into parallel UTXOs   |
+| Forces covenants onto shared mutable app state        | Based apps exist for that architecture                         |
+| Uses `0x21` / `r0.succinct.verify` for new ZK apps    | Deprecated & unsound (GHSA-g6qg-9j8p-7j87); use Groth16 `0x20` |
 
 ## Preflight questions
 

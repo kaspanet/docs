@@ -17,7 +17,7 @@ For JavaScript, Rust, and Python, the recommended entrypoint is the high-level W
 ## API overview
 
 1. Initialize a new wallet object for a network and storage mode.
-2. Create, open or check for existance of a wallet.
+2. Create, open or check for existence of a wallet.
 3. Ensure an account exists on the wallet.
    Create the default account or import the account you will use.
 4. Connect and start processing.
@@ -54,7 +54,7 @@ const wallet = new Wallet({
 });
 
 try {
-  // optionally replace with upsert: check existance - create if not existing else open
+  // optionally replace with upsert: check existence - create if not existing else open
   await wallet.walletOpen({
     walletSecret,
     filename,
@@ -109,7 +109,7 @@ let exists = wallet
     .iter()
     .any(|descriptor| descriptor.filename == filename);
 
-// optionally replace with upsert: check existance - create if not existing else open
+// optionally replace with upsert: check existence - create if not existing else open
 wallet
     .clone()
     .wallet_open(wallet_secret.clone(), Some(filename.clone()), false, false)
@@ -171,7 +171,7 @@ wallet = Wallet(
 )
 
 try:
-    # optionally replace with upsert: check existance - create if not existing else open
+    # optionally replace with upsert: check existence - create if not existing else open
     await wallet.wallet_open(
         wallet_secret=wallet_secret,
         account_descriptors=False,

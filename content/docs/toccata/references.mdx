@@ -9,14 +9,14 @@ When the guide and code disagree, follow the code and fix the guide.
 
 ## KIPs
 
-| KIP                                                                | What to read it for                                  |
-| ------------------------------------------------------------------ | ---------------------------------------------------- |
-| [KIP-16](https://github.com/kaspanet/kips/blob/master/kip-0016.md) | `OpZkPrecompile`, Groth16, RISC Zero Succinct        |
-| [KIP-17](https://github.com/kaspanet/kips/blob/master/kip-0017.md) | covenant opcode extensions and script expressiveness |
-| [KIP-20](https://github.com/kaspanet/kips/blob/master/kip-0020.md) | covenant IDs, output bindings, covenant contexts     |
-| [KIP-21](https://github.com/kaspanet/kips/blob/master/kip-0021.md) | partitioned sequencing commitments and user lanes    |
-| [KIP-24](https://github.com/kaspanet/kips/blob/master/kip-0024.md) | transaction v1 fields and hashing                    |
-| [KIP-25](https://github.com/kaspanet/kips/blob/master/kip-0025.md) | compute budget and script pricing                    |
+| KIP                                                                | What to read it for                                                                     |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| [KIP-16](https://github.com/kaspanet/kips/blob/master/kip-0016.md) | `OpZkPrecompile`: generic Groth16 (`0x20`); native RISC Zero STARK (`0x21`, deprecated) |
+| [KIP-17](https://github.com/kaspanet/kips/blob/master/kip-0017.md) | covenant opcode extensions and script expressiveness                                    |
+| [KIP-20](https://github.com/kaspanet/kips/blob/master/kip-0020.md) | covenant IDs, output bindings, covenant contexts                                        |
+| [KIP-21](https://github.com/kaspanet/kips/blob/master/kip-0021.md) | partitioned sequencing commitments and user lanes                                       |
+| [KIP-24 (Draft PR #41)](https://github.com/kaspanet/kips/pull/41)  | transaction v1 fields and hashing                                                       |
+| [KIP-25 (Draft PR #42)](https://github.com/kaspanet/kips/pull/42)  | compute budget and script pricing                                                       |
 
 ## rusty-kaspa code map
 
@@ -37,47 +37,37 @@ When the guide and code disagree, follow the code and fix the guide.
 
 ## Tooling repos
 
-| Repo                                                     | What it is                                                         |
-| -------------------------------------------------------- | ------------------------------------------------------------------ |
-| [silverscript](https://github.com/kaspanet/silverscript) | higher-level covenant language, compiler, examples, debugger       |
-| [argent](https://github.com/michaelsutton/argent)        | experimental actor-style frontend for multi-contract covenant apps |
-| [vprogs](https://github.com/kaspanet/vprogs)             | evolving runtime for based computation and RISC Zero proving       |
-| [research](https://github.com/kaspanet/research)         | vProgs yellow paper and related research material                  |
+| Repo                                                                               | What it is                                                                         |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [silverscript](https://github.com/kaspanet/silverscript)                           | higher-level covenant language, compiler, ABI, examples, debugger                  |
+| [argent](https://github.com/argent-lang/argent)                                    | multi-contract actor compiler, ICC, genesis proof tooling, and runtime             |
+| [vprogs](https://github.com/kaspanet/vprogs)                                       | evolving Rust framework and runtime for based computation                          |
+| [kaspa-r0-recursion-legacy](https://github.com/kaspanet/kaspa-r0-recursion-legacy) | legacy verifier-only RISC Zero `4.0.4` recursion crate for consensus compatibility |
+| [research](https://github.com/kaspanet/research)                                   | vProgs yellow paper and related research material                                  |
 
-## Local reading paths
+## Source reading paths
 
 For covenant developers:
 
-```text
-silverscript/docs/TUTORIAL.md
-silverscript/docs/DECL.md
-silverscript/silverscript-lang/tests/examples/kcc20.sil
-silverscript/examples/chess/book/src/patterns.md
-```
+- [SilverScript Tutorial](https://github.com/kaspanet/silverscript/blob/master/docs/TUTORIAL.md)
+- [SilverScript Covenant Declarations (`DECL.md`)](https://github.com/kaspanet/silverscript/blob/master/docs/DECL.md)
+- [SilverScript Fungible Token Book](https://github.com/kaspanet/silverscript/tree/master/docs/fungible-token-book)
 
 For multi-contract covenant developers:
 
-```text
-argent/docs/argent-design.md
-argent/examples/stones/README.md
-argent/build/stones/manifest.json
-argent/build/stones/sil/*.sil
-```
+- [Argent Design Doc](https://github.com/argent-lang/argent/blob/master/docs/argent-design.md)
+- [Argent ICC Semantics](https://github.com/argent-lang/argent/blob/master/docs/icc-semantics.md)
+- [Argent Genesis Proof Tooling](https://github.com/argent-lang/argent/blob/master/docs/genesis-proof-tooling.md)
 
 For based-app developers:
 
-```text
-vprogs/README.md
-vprogs/docs/proving-pipeline.md
-vprogs/zk/backend/risc0/transaction-processor/src/main.rs
-vprogs/zk/backend/risc0/batch-processor/src/main.rs
-vprogs/zk/backend/risc0/batch-aggregator/src/main.rs
-vprogs/zk/abi/src/batch_aggregator/journal/state_transition.rs
-```
+- [vProgs Repository (`kaspanet/vprogs`)](https://github.com/kaspanet/vprogs)
+- [vProgs Workshop](https://biryukovmaxim.github.io/vprogs-workshop/)
 
-## Narrative source
+## Narrative & security advisories
 
 - [Kaspa Covenants: Toccata Hard Fork Outlook](https://medium.com/@michaelsuttonil/kaspa-covenants-toccata-hard-fork-outlook-a4d81a40900c)
+- [What the RISC Zero Advisory Means for Kaspa's ZK Covenants](https://medium.com/@michaelsuttonil/what-the-risc-zero-advisory-means-for-kaspas-zk-covenants-e8cb067ea65b) ([GHSA-g6qg-9j8p-7j87](https://github.com/risc0/risc0/security/advisories/GHSA-g6qg-9j8p-7j87), [`rusty-kaspa` PR #1176](https://github.com/kaspanet/rusty-kaspa/pull/1176))
 
 ## What still needs hardening
 

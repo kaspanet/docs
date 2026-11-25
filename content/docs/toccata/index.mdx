@@ -53,14 +53,14 @@ Before Toccata, a Kaspa script could protect a UTXO, but it could not easily req
 
 Toccata adds the pieces needed for that check.
 
-| Piece                 | What it is for                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------- |
-| Transaction v1        | `compute_budget`, covenant output bindings, user lanes, gas, and the v1 BLAKE3 txid model |
-| Covenant IDs          | a consensus-tracked lineage label for covenant UTXOs, independent of changing P2SH hashes |
-| Introspection opcodes | access to inputs, outputs, covenant groups, auth groups, hashes, and byte slices          |
-| Script pricing        | a runtime meter for stack growth, hashing, signatures, and ZK verification                |
-| ZK precompiles        | direct verification of Groth16 and RISC Zero Succinct proofs inside script                |
-| Seqcommit lanes       | app-specific L1 activity commitments for based apps, without proving the whole DAG        |
+| Piece                 | What it is for                                                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Transaction v1        | `compute_budget`, covenant output bindings, user lanes, gas, and the v1 BLAKE3 txid model                                                                                          |
+| Covenant IDs          | a consensus-tracked lineage label for covenant UTXOs, independent of changing P2SH hashes                                                                                          |
+| Introspection opcodes | access to inputs, outputs, covenant groups, auth groups, hashes, and byte slices                                                                                                   |
+| Script pricing        | a runtime meter for stack growth, hashing, signatures, and ZK verification                                                                                                         |
+| ZK precompiles        | direct verification of generic BN254 Groth16 (`0x20`) proofs inside script; native RISC Zero STARK (`0x21`) is deprecated for new deployments ([see advisory](/toccata/inline-zk)) |
+| Seqcommit lanes       | app-specific L1 activity commitments for based apps, without proving the whole DAG                                                                                                 |
 
 The result is still UTXO-native. Toccata does not turn Kaspa into an account-chain smart contract system. Instead it makes UTXOs able to carry state, split into parallel lineages, merge when necessary, and prove the next step.
 
