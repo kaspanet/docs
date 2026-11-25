@@ -393,15 +393,15 @@ body {
   overflow: hidden;
 }
 
-.pattern-snippet--argent {
+.pattern-snippet.pattern-snippet--argent {
   --ps-accent: var(--kaspa-docs-alert-tip);
 }
 
-.pattern-snippet--silverscript {
+.pattern-snippet.pattern-snippet--silverscript {
   --ps-accent: var(--kaspa-docs-alert-note);
 }
 
-.pattern-snippet--prototype {
+.pattern-snippet.pattern-snippet--prototype {
   --ps-accent: var(--kaspa-docs-alert-important);
 }
 

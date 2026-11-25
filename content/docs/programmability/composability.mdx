@@ -107,10 +107,17 @@ emits { controller: Minter } {
     require(prev_proxy.controller_id == self.cov_id);
     require(amount >= minted_amount);
 
+    MinterProxyState next_proxy = { controller_id: self.cov_id };
+    KCC20State next_recipient = {
+        owner_identifier: recipient_owner,
+        identifier_type: IDENTIFIER_PUBKEY,
+        amount: minted_amount,
+    };
+
     // Constrain the observed asset family's exact successor outputs.
     require asset.outputs become {
-        proxy     <- KCC20Asset::MinterProxy({ controller_id: self.cov_id }),
-        recipient <- KCC20Asset::KCC20({ owner: recipient_owner, amount: minted_amount }),
+        proxy <- KCC20Asset::MinterProxy(next_proxy),
+        recipient <- KCC20Asset::KCC20(next_recipient),
     };
     // ... update controller's own remaining allowance ...
 }
@@ -185,15 +192,17 @@ A receipt field needs no dedicated language feature — it is a convention over 
 
 ```rust
 // Peer actor commits a standardized receipt digest in its successor state:
-byte[32] receipt = blake3(TAG_TRANSFER + from + to + byte[](amount));
-// become next <- Peer({ ..., last_op: receipt });
+byte[32] receipt = blake3(
+    byte[](TAG_TRANSFER) + byte[](from) + byte[](to) + OpNum2Bin(amount, 8)
+);
+// become next <- Peer(next_peer); // with `last_op: receipt`
 
 // Co-spent observer checks the declared receipt on the peer output
 // without re-deriving conservation across every peer input and output:
-PeerCapsule expected = {
-    ...,
-    last_op: blake3(TAG_TRANSFER + buyer + byte[32](self.cov_id) + byte[](price)),
-};
+byte[32] expected_op = blake3(
+    byte[](TAG_TRANSFER) + byte[](buyer) + byte[](self.cov_id) + OpNum2Bin(price, 8)
+);
+PeerCapsule expected = { ..., last_op: expected_op };
 require peer.outputs become { target <- self.peer_type(expected) };
 ```
 
@@ -237,11 +246,13 @@ require(stmt == METHOD_QUOTE + expected_args + OpNum2Bin(fee_bps, 8));
 
 // --- Service covenant (e.g. fee policy verifying its own input section) ---
 int my_dir = HEADER_LEN + OpTxInputIndex() * 8;
+require(OpTxPayloadLen() >= my_dir + 8);
 int my_start = OpBin2Num(OpTxPayloadSubstr(my_dir, my_dir + 4));
 int my_len   = OpBin2Num(OpTxPayloadSubstr(my_dir + 4, my_dir + 8));
 
 // On a serving entry (1 statement): verify header + recompute the proposed result:
 require(my_len == STMT_LEN);
+require(OpTxPayloadLen() >= my_start + STMT_LEN);
 byte[] served = OpTxPayloadSubstr(my_start, my_start + STMT_LEN);
 require(served == METHOD_QUOTE + args_bytes + OpNum2Bin(computed_fee_bps, 8));
 
@@ -253,7 +264,7 @@ require(served == METHOD_QUOTE + args_bytes + OpNum2Bin(computed_fee_bps, 8));
 
 <PatternSnippet
   status="prototype"
-  title="Service interfaces and serve clauses (dynamic dispatch proposal)"
+  title="Service interfaces and serve clauses"
   sourceLabel="kas-smiths.org/t/.../171"
   sourceHref="https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171"
 >
@@ -303,18 +314,22 @@ As noted in [Covenant State](./covenant-state#auth-groups-and-covenant-groups), 
 entry launch(int left_amount, int right_amount)
 spawns new_pair by pair_id {
     outputs {
-        left:  self.pair_type,
+        left: self.pair_type,
         right: self.pair_type,
     }
 }
 emits next: Controller {
+    PairState left_state = { amount: left_amount };
+    PairState right_state = { amount: right_amount };
+    ControllerState next_state = { pair_type: pair_type, launches: launches + 1 };
+
     require new_pair.outputs become {
-        left  <- self.pair_type({ amount: left_amount }),
-        right <- self.pair_type({ amount: right_amount }),
+        left <- self.pair_type(left_state),
+        right <- self.pair_type(right_state),
     };
     // `pair_id` is now authenticated as the exact genesis covenant_id
-    // of those two outputs and can be saved in `next` state.
-    become next <- Controller({ pair_type: pair_type, launches: launches + 1 });
+    // of those two outputs and can be saved in `next_state`.
+    become next <- Controller(next_state);
 }
 ```
 
@@ -329,7 +344,7 @@ Consider an application covenant that verifies BN254 Groth16 proofs via [`OpZkPr
 With a **verifier router covenant**, the responsibilities split cleanly across two co-spent inputs:
 
 ```mermaid
-flowchart LR
+flowchart TB
     classDef app fill:#eef9ef,stroke:#4d9f5b,color:#132016
     classDef router fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
     classDef pl fill:#eef6ff,stroke:#4b82c3,color:#172033
