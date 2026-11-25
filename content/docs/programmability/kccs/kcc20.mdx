@@ -148,7 +148,7 @@ When deploying `KCC20PublicMint`, create the initial `PublicMint` (carrying the 
 
 The repository commits pinned build outputs under `fixtures/public-mint/` (`kcc20.json`, `artifact.json`, `manifest.json`, and generated `sil/{KCC20,PublicMint,TokenSeed}.sil`) so contract and compiler changes are directly reviewable in Git.
 
-Its test suite executes malformed and valid transactions directly in the covenant VM (without relying on a transaction builder to filter edge cases) and runs the **22** KCC-20 specification vectors from `fixtures/kcc20/conformance.json` — comparing ABI, encoding, and hash vectors byte for byte and executing transfer and borrowed-receive cases in the VM. Note that these offline tests do not exercise live network submission or wallet synchronization and are not an independent third-party security audit.
+Its test suite executes malformed and valid transactions directly in the covenant VM (without relying on a transaction builder to filter edge cases) and runs the KCC-20 specification vectors from `fixtures/kcc20/conformance.json` — checking ABI, encoding, and hash vectors byte for byte alongside all **22** transfer and borrowed-receive VM cases. Note that these offline tests do not exercise live network submission or wallet synchronization and are not an independent third-party security audit.
 
 ```bash
 # Run offline threshold-borrow, hash-chain borrow, and public-mint examples
@@ -179,6 +179,6 @@ Suppose you are building a wallet or a covenant DEX that supports arbitrary KCC-
 
 1. **Discover and verify the token:** Load the token's KCC-1/KCC-20 Program ABI artifact (for example, `kcc20.json` and sibling `artifact.json` in `kcc20-reference`), verify its genesis provenance against the on-chain `covenant_id`, and read its configured transfer entrypoints, supported owner schemes, and input/output bounds.
 2. **Wallets:** Index live UTXOs by `covenant_id`, construct transfer spends using the token's declared leader/delegator entrypoints (`transfer` and `transfer_delegator` by default), and optionally fund a zero-balance receiving UTXO (such as via `TokenSeed::create` in `kcc20-reference`) with a `hash-chain/v1` or `amount-threshold/v1` guard so senders can borrow-send into it without supplying KAS.
-3. **Covenant protocols (e.g., DEXs or vaults):** Whitelist each token by its `(template_hash, covenant_id)` pair, take custody under KCC-2's `covenant-id/v1` owner scheme, and inspect the fixed-width 112-byte `KCC20State` on co-spent inputs and outputs to settle trades atomically on L1.
+3. **Covenant protocols (e.g., DEXs or vaults):** Whitelist each token by its `(template_hash, covenant_id)` pair, confirm its declared owner schemes include KCC-2's `covenant-id/v1` before taking covenant custody, and inspect the fixed-width 112-byte `KCC20State` on co-spent inputs and outputs to settle trades atomically on L1.
 
 Continue to [Inline ZK](/programmability/inline-zk) for direct proof verification inside covenants, or return to [Conventions (KCCs)](/programmability/kccs).
