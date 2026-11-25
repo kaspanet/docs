@@ -1,4 +1,4 @@
-Generate Java gRPC sources and run the Java example (requires a local `gradle` installation):
+Generate Java gRPC sources and run the Java example from `examples/` (requires a local `gradle` installation):
 
 ```bash
 gradle -p ./java syncKaspaProto
