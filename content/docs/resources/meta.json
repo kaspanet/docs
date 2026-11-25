@@ -1,9 +1,11 @@
 {
   "title": "Resources",
-  "description": "External Kaspa resources for the project website, explorer, and public node status.",
+  "description": "External Kaspa resources for the project website, explorer, public node status, KIPs, and KCCs.",
   "pages": [
     "external:[kaspa.org](https://kaspa.org)",
     "external:[Explorer](https://explorer.kaspa.org)",
-    "external:[PNN Status](https://pnn.kaspa.stream)"
+    "external:[PNN Status](https://pnn.kaspa.stream)",
+    "external:[KIPs (kips.dev)](https://kips.dev)",
+    "external:[KCCs (kccs.dev)](https://kccs.dev)"
   ]
 }

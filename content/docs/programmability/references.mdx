@@ -9,6 +9,8 @@ When the guide and code disagree, follow the code and fix the guide.
 
 ## KIPs
 
+Browse KIPs on [kips.dev](https://kips.dev/) or directly in [`kaspanet/kips`](https://github.com/kaspanet/kips):
+
 | KIP                                                                | What to read it for                                                                     |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
 | [KIP-16](https://github.com/kaspanet/kips/blob/master/kip-0016.md) | `OpZkPrecompile`: generic Groth16 (`0x20`); native RISC Zero STARK (`0x21`, deprecated) |
@@ -17,6 +19,17 @@ When the guide and code disagree, follow the code and fix the guide.
 | [KIP-21](https://github.com/kaspanet/kips/blob/master/kip-0021.md) | partitioned sequencing commitments and user lanes                                       |
 | [KIP-24 (Draft PR #41)](https://github.com/kaspanet/kips/pull/41)  | transaction v1 fields and hashing                                                       |
 | [KIP-25 (Draft PR #42)](https://github.com/kaspanet/kips/pull/42)  | compute budget and script pricing                                                       |
+
+## KCCs
+
+Browse KCCs on [kccs.dev](https://kccs.dev/) or directly in [`kaspanet/kccs`](https://github.com/kaspanet/kccs):
+
+| KCC                                                              | Status | What to read it for                                                           |
+| ---------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| [KCC-0](https://github.com/kaspanet/kccs/blob/main/kcc-0000.md)  | Final  | KCC governance, registries, and lifecycle                                     |
+| [KCC-1](https://github.com/kaspanet/kccs/blob/main/kcc-0001.md)  | Final  | covenant concepts, byte layouts, Program ABI, dispatch tags, virtual elements |
+| [KCC-2](https://github.com/kaspanet/kccs/blob/main/kcc-0002.md)  | Final  | canonical authority schemes (`0x00`–`0x04`) and co-spend security notes       |
+| [KCC-20](https://github.com/kaspanet/kccs/blob/main/kcc-0020.md) | Final  | fungible token covenant standard, borrowed receive, and conformance vectors   |
 
 ## rusty-kaspa code map
 
@@ -64,6 +77,12 @@ For multi-contract covenant developers:
 - [Argent ICC Semantics](https://github.com/argent-lang/argent/blob/master/docs/icc-semantics.md)
 - [Argent Genesis Proof Tooling](https://github.com/argent-lang/argent/blob/master/docs/genesis-proof-tooling.md)
 - [Argent Security Invariants](https://github.com/argent-lang/argent/tree/master/docs/security-invariants)
+
+For KCC-20 token developers:
+
+- [KCC-20 Interactive Walkthrough (`kcc20.manyfest.dev`)](https://kcc20.manyfest.dev)
+- [KCC-20 Hash-Chain Borrow Demo (`kcc20.manyfest.dev/hash-chain`)](https://kcc20.manyfest.dev/hash-chain)
+- [KCC-20 Reference Implementation (`argent-lang/kcc20-reference`)](https://github.com/argent-lang/kcc20-reference)
 
 For based-app developers:
 

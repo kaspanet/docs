@@ -19,7 +19,9 @@ For covenant work:
 2. [Transaction V1](./transaction-v1)
 3. [Script Pricing](./script-pricing)
 4. [Silverscript](./silverscript)
-5. [Decision Guide](./decision-guide)
+5. [Argent](./argent)
+6. [Conventions (KCCs)](./kccs) and [KCC-20](./kccs/kcc20)
+7. [Decision Guide](./decision-guide)
 
 For based-app work:
 
@@ -43,6 +45,7 @@ For based-app work:
 - KIP-21 lanes let app proofs focus on lane activity instead of total DAG activity. Do not use the word "lane" to describe parallel UTXOs.
 - Inspect the [latest Silverscript release](https://github.com/kaspanet/silverscript/releases/latest) / `silverscript-lang` crate and its docs ([`TUTORIAL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/TUTORIAL.md), [`DECL.md`](https://github.com/kaspanet/silverscript/blob/master/docs/DECL.md)) for exact language syntax.
 - Argent compiles `.ag` actors directly to plain `.sil` contracts; inspect the [`argent-lang/argent` docs](https://github.com/argent-lang/argent/tree/master/docs) for exact language and runtime details, and inspect and test the generated `.sil` files directly for production use.
+- When building fungible tokens or interoperable covenants, follow Final [KCC-1 / KCC-2](./kccs) and [KCC-20](./kccs/kcc20) conventions (and use [`argent-lang/kcc20-reference`](https://github.com/argent-lang/kcc20-reference) as the reference baseline).
 - Argent and vprogs APIs may still evolve. Check the repo before writing production code.
 
 ## Prompt for covenant work
@@ -115,13 +118,15 @@ Ask the agent to answer these before implementation:
 
 ## Repo map
 
-| Repo           | Use                                                                     |
-| -------------- | ----------------------------------------------------------------------- |
-| `rusty-kaspa`  | consensus, transaction v1, hashing, script engine, pricing, KIP-21      |
-| `kips`         | KIPs 16, 17, 20, 21, 24, 25                                             |
-| `silverscript` | covenant language, `silverc`, ABI, macros, debugger                     |
-| `argent`       | multi-contract actor compiler (`argentc`), ICC, runtime, genesis proofs |
-| `vprogs`       | based-app runtime and RISC Zero proving pipeline                        |
-| `docs`         | rendered MDX docs                                                       |
+| Repo              | Use                                                                     |
+| ----------------- | ----------------------------------------------------------------------- |
+| `rusty-kaspa`     | consensus, transaction v1, hashing, script engine, pricing, KIP-21      |
+| `kips`            | KIPs 16, 17, 20, 21, 24, 25                                             |
+| `kccs`            | Final KCC-0, KCC-1, KCC-2, KCC-20 specs and conformance vectors         |
+| `silverscript`    | covenant language, `silverc`, ABI, macros, debugger                     |
+| `argent`          | multi-contract actor compiler (`argentc`), ICC, runtime, genesis proofs |
+| `kcc20-reference` | Argent KCC-20 reference app (`KCC20`, `PublicMint`, `TokenSeed`)        |
+| `vprogs`          | based-app runtime and RISC Zero proving pipeline                        |
+| `docs`            | rendered MDX docs                                                       |
 
 That short preflight usually saves more time than a long first implementation attempt.
