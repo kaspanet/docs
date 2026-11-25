@@ -25,6 +25,7 @@ services:
   kaspad:
     image: kaspanet/rusty-kaspad:latest
     command:
+      - kaspad
       - --utxoindex
       - --rpclisten=0.0.0.0
       - --rpclisten-borsh=0.0.0.0

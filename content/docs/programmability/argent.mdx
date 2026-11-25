@@ -100,7 +100,7 @@ app Tickets {
 }
 ```
 
-One `Event::buy` transaction advances `Event` and creates an independently owned `Ticket`. Later transactions transfer that `Ticket` in parallel without touching `Event`.
+One `Event::buy` transaction advances `Event` and creates an independently owned `Ticket`. Later transactions transfer that `Ticket` in parallel without touching `Event`. For a guided walkthrough of this app, watch [Argent Episode 1 (YouTube)](https://www.youtube.com/watch?v=xZsuvcc9qPk) alongside the [`episode-01` branch of `argent-template`](https://github.com/argent-lang/argent-template/tree/episode-01).
 
 ## Core vocabulary
 
@@ -157,7 +157,7 @@ argentc inspect build/app
 
 `argentc inspect` reports per-actor script, state, and template sizes, static opcode counts, entry arguments, generated witnesses, route metadata, and signature-script size estimates.
 
-- **`argent-artifact`:** Portable artifact format wrapping upstream `silverscript-abi` alongside coordination, routing, dependency IDs, and witness recipes (`Artifact::verify()`).
+- **`argent-artifact`:** Portable artifact format wrapping upstream `silverscript-abi` alongside coordination, routing, dependency IDs, and witness recipes (`Artifact::check_consistency()`).
 - **`argent-runtime`:** Consumes `artifact.json` through `TxBuilder`, `TxContext`, `EntryCall`, and `ArtifactBundle` to construct atomic multi-actor and multi-app Kaspa v1 transactions.
 - **`argent-genesis` (launch proofs):** Because a live covenant UTXO only exposes a P2SH hash and a KIP-20 `covenant_id`, wallets, indexers, and auditors need a way to verify _which_ app and initial actor states created that covenant ID. Argent provides a 3-layer verifiable proof stack (`ConsensusGenesisProof` → `SilGenesisProof` → `ArgentGenesisProof`):
 
@@ -187,12 +187,12 @@ When preparing an Argent application for mainnet today, treat the generated `.si
   <Card
     title="argent-lang/argent-template"
     href="https://github.com/argent-lang/argent-template"
-    description="Starter project template with local setup script, VS Code extension helper, and Event/Ticket tutorial."
+    description="Starter project template with local setup script, VS Code extension helper, and Counter starter (Event/Ticket tutorial on the episode-01 branch)."
   />
   <Card
     title="argent-lang/argent-playground"
     href="https://github.com/argent-lang/argent-playground"
-    description="Worked multi-actor and ICC demos including an open-ICC DEX, multi-app badges, and a 12-actor Chess Mux app."
+    description="Worked multi-actor and ICC demos including an open-ICC DEX, multi-app badges, and a 12-actor Chess Mux app (on the chess branch)."
   />
   <Card
     title="argent-lang/kcc20-reference"

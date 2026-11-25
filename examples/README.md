@@ -36,7 +36,7 @@ Simple runnable examples for the docs pages under `content/docs/integrate`.
 
    Then open `http://localhost:8080/browser/getting-started.html` or `http://localhost:8080/browser/wallet.html`.
 
-5. Run a Rust example:
+5. Run a Rust example (requires a sibling `rusty-kaspa` checkout next to this repo because `rust/Cargo.toml` uses `../../../rusty-kaspa/...` path dependencies):
 
    ```bash
    cargo run --manifest-path ./rust/Cargo.toml --bin getting_started

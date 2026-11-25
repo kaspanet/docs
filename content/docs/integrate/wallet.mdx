@@ -30,7 +30,7 @@ For JavaScript, Rust, and Python, the recommended entrypoint is the high-level W
 
 ## Secrets
 
-- `walletSecret` is used to derive an encryption key (via Argon2 + SHA-256) that protects wallet storage using ChaCha20-Poly1305.
+- `walletSecret` is used to derive an encryption key (via Argon2 + SHA-256) that protects wallet storage using XChaCha20-Poly1305.
 - `paymentSecret` is the optional BIP39 or mnemonic passphrase.
 
 ## Events
