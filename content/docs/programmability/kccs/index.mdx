@@ -1,0 +1,57 @@
+---
+title: Conventions (KCCs)
+description: "Kaspa Calls for Conventions (KCCs): language-independent standards for covenant ABIs, authority schemes, and interoperable L1 applications."
+---
+
+**Kaspa Calls for Conventions (KCCs)** are ecosystem-level specifications that let independent wallets, explorers, indexers, compilers, and covenant applications interoperate without modifying Kaspa L1 consensus. While KIPs govern consensus and core node rules, KCCs standardize how applications encode state, dispatch entrypoints, authorize spends, and compose on-chain.
+
+Browse published standards on **[kccs.dev](https://kccs.dev/)** or read the canonical specifications and conformance vectors in **[`kaspanet/kccs`](https://github.com/kaspanet/kccs)**.
+
+## Finalized foundation standards
+
+| KCC                                                              | Title                                    | Status | Role                                                                                       |
+| ---------------------------------------------------------------- | ---------------------------------------- | ------ | ------------------------------------------------------------------------------------------ |
+| [KCC-0](https://github.com/kaspanet/kccs/blob/main/kcc-0000.md)  | KCC Purpose and Guidelines               | Final  | Governance, registries, and lifecycle; Standards Track Final requires conformance vectors  |
+| [KCC-1](https://github.com/kaspanet/kccs/blob/main/kcc-0001.md)  | Covenant Concepts, Byte Layouts, and ABI | Final  | Language-independent hashing, value ABI, 4-byte dispatch tags, roles, and virtual elements |
+| [KCC-2](https://github.com/kaspanet/kccs/blob/main/kcc-0002.md)  | Authority Schemes                        | Final  | Canonical 1-byte registry (`0x00`–`0x04`) for key, script-hash, and covenant-ID ownership  |
+| [KCC-20](https://github.com/kaspanet/kccs/blob/main/kcc-0020.md) | Fungible Token Covenant Specification    | Final  | Standardized L1 fungible token state, transfers, borrowed receive, and state extendability |
+
+## KCC-1: Byte layouts and Program ABI
+
+[KCC-1](https://github.com/kaspanet/kccs/blob/main/kcc-0001.md) lifts covenant ABI conventions out of any single compiler so contracts written in [Silverscript](/programmability/silverscript), [Argent](/programmability/argent), or raw script share the exact same wire format:
+
+- **Canonical hashing:** Unkeyed BLAKE3 (`Hash(x)`) and keyed BLAKE3 (`Hash(x, key)` with a zero-padded 32-byte key) for commitments and dispatch tags; unkeyed BLAKE2b-256 exclusively for the standard P2SH envelope (`OP_BLAKE2B OP_DATA_32 Blake2b(R) OP_EQUAL`).
+- **Value ABI & 4-byte dispatch tags:** Deterministic encoding for integers, scalars, fixed/dynamic arrays, and records, plus 4-byte BLAKE3 signature-based dispatch tags (including record fields in the tag preimage).
+- **Leader / Delegator roles & Virtual Elements:** Standardizes ID-aware multi-input roles and hash-committed extended state (**Virtual Elements**) so covenants can carry custom application data without altering their public base state layout.
+
+Standardized state layouts also enable **implementation-agnostic on-chain composability**: an external covenant such as a DEX can store only a `(template_hash, covenant_id)` pair for a conforming asset, verify the asset's template witness against `template_hash` at spend time, and inspect its input and output states directly.
+
+## KCC-2: Authority schemes
+
+[KCC-2](https://github.com/kaspanet/kccs/blob/main/kcc-0002.md) defines a canonical 1-byte registry for owner authorization (`0x00`–`0x7f` standard, `0x80`–`0xff` custom):
+
+| Byte   | Scheme             | Identifier payload                     | Minimum authorization check                                         |
+| ------ | ------------------ | -------------------------------------- | ------------------------------------------------------------------- |
+| `0x00` | `p2pk-schnorr/v1`  | 32-byte Schnorr pubkey                 | Valid Schnorr transaction signature                                 |
+| `0x01` | `p2pkh-schnorr/v1` | `BLAKE3(32-byte Schnorr pubkey)`       | Revealed pubkey matching digest + Schnorr transaction signature     |
+| `0x02` | `p2pkh-ecdsa/v1`   | `BLAKE3(33-byte compressed ECDSA key)` | Revealed pubkey matching digest + ECDSA transaction signature       |
+| `0x03` | `p2sh/v1`          | `BLAKE2b(redeem_script)`               | Co-spent input whose script public key matches that P2SH commitment |
+| `0x04` | `covenant-id/v1`   | 32-byte KIP-20 `covenant_id`           | Co-spent input carrying that authenticated `covenant_id`            |
+
+> [!WARNING]
+> **Co-spend authorization discipline (`p2sh/v1`, `covenant-id/v1`):** Co-spent participation proves that the authorizing script or covenant ran in the same transaction. Any covenant acting as an owner under `0x03` or `0x04` must ensure that _every_ spend path — including maintenance or recovery entrypoints — validates intended actions rather than leaving an unrestricted bypass branch.
+
+## Standards in detail
+
+<Cards>
+  <Card
+    title="KCC-20: Fungible Token Covenants"
+    href="/programmability/kccs/kcc20"
+    description="Flagship L1 fungible token standard: state layout, borrowed receive, hash-chain anti-front-running, and the Argent reference implementation."
+  />
+  <Card
+    title="kccs.dev Portal"
+    href="https://kccs.dev/"
+    description="Browse finalized standards and active drafts across the Kaspa Calls for Conventions registry."
+  />
+</Cards>

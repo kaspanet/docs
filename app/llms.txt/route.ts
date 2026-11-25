@@ -40,6 +40,8 @@ const sections: {
       { slugs: ["programmability", "script-pricing"] },
       { slugs: ["programmability", "silverscript"] },
       { slugs: ["programmability", "argent"] },
+      { slugs: ["programmability", "kccs"] },
+      { slugs: ["programmability", "kccs", "kcc20"] },
       { slugs: ["programmability", "decision-guide"] },
       { slugs: ["programmability", "references"] },
     ],

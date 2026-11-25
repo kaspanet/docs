@@ -1,0 +1,5 @@
+{
+  "title": "Conventions (KCCs)",
+  "description": "Ecosystem-level Kaspa Calls for Conventions (KCCs) for covenant ABIs, authority schemes, and token standards.",
+  "pages": ["kcc20"]
+}
