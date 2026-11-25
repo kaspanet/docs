@@ -397,8 +397,12 @@ body {
   --ps-accent: var(--kaspa-docs-alert-tip);
 }
 
-.pattern-snippet--prototype {
+.pattern-snippet--silverscript {
   --ps-accent: var(--kaspa-docs-alert-note);
+}
+
+.pattern-snippet--prototype {
+  --ps-accent: var(--kaspa-docs-alert-important);
 }
 
 .pattern-snippet__header {
