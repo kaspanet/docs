@@ -1,5 +1,17 @@
 {
   "title": "Programmability",
-  "description": "High-level programmability models for covenants, based apps, inline ZK, and future vProgs.",
-  "pages": ["covenants", "based-apps", "full-vprogs", "inline-zk"]
+  "description": "Kaspa's Toccata mainnet programmability stack: covenants, transaction v1, script pricing, Silverscript, Argent, inline ZK, based apps, and future vProgs.",
+  "pages": [
+    "covenant-state",
+    "transaction-v1",
+    "script-pricing",
+    "silverscript",
+    "argent",
+    "inline-zk",
+    "based-apps",
+    "full-vprogs",
+    "decision-guide",
+    "agent-brief",
+    "references"
+  ]
 }
