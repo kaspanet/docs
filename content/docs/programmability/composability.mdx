@@ -1,0 +1,337 @@
+---
+title: Covenant Composability
+description: "How independent L1 covenants compose atomically in one transaction through co-spending, mutual inspection, shared interfaces, and transaction payloads."
+---
+
+On an account-based chain, contracts compose through imperative calls: contract `A` invokes a method on contract `B`, and the VM executes `B`'s code inline. Kaspa's L1 covenant model works differently.
+
+On Kaspa, independent covenants compose by **co-spending in the same atomic transaction**. Every input script in the transaction executes and must succeed, or the entire transaction is rejected. Neither covenant runs the other's code — instead, each covenant validates its own transition and inspects the transaction to verify what its peer covenant is doing alongside it.
+
+```mermaid
+flowchart TB
+    classDef a fill:#eef9ef,stroke:#4d9f5b,color:#132016
+    classDef b fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
+    classDef tx fill:#eef6ff,stroke:#4b82c3,color:#172033
+
+    subgraph TX["One atomic v1 transaction"]
+        direction TB
+        IA["Input: Covenant A<br/>(covenant_id = A)"]:::a
+        IB["Input: Covenant B<br/>(covenant_id = B)"]:::b
+        PL["Shared tx.payload<br/>(readable by all inputs)"]:::tx
+        OA["Output(s): Covenant A'<br/>(covenant_id = A)"]:::a
+        OB["Output(s): Covenant B'<br/>(covenant_id = B)"]:::b
+
+        IA --> OA
+        IB --> OB
+        IA -. "inspects B's bindings, state, or payload" .-> IB
+        IB -. "inspects A's bindings, state, or payload" .-> IA
+        IA -. "reads slice" .-> PL
+        IB -. "reads slice" .-> PL
+    end
+```
+
+Four L1 primitives make this work cleanly without assuming any single covenant owns the whole transaction:
+
+- **All-or-nothing transaction atomicity:** If any input script fails, none of the state transitions take effect.
+- **Scoped family identity (`covenant_id`):** [KIP-20](./covenant-state#covenant-ids) tags inputs and outputs by covenant family, and `OpCovInput*` / `OpCovOutput*` let each script locate a peer covenant's exact slice of the transaction even when unrelated fee, change, or third-party covenant inputs are present.
+- **Cross-input and output introspection:** Any input script can read other inputs' outpoints and script public keys, inspect outputs' values, scripts, and covenant bindings (`OpOutputCovenantId`, `OpOutputAuthorizingInput`), and verify preimages against P2SH hashes.
+- **Shared transaction payload:** Every input script can inspect the same transaction `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`, giving co-spent covenants an ephemeral shared channel for the duration of one transaction.
+
+> [!NOTE]
+> The main text on this page stays language-agnostic and describes L1 transaction mechanics directly. Colored snippet boxes below each pattern show concrete examples — distinguishing syntax **already implemented in [Argent](./argent)** from **conceptual L1 script patterns** that can be written directly in [Silverscript](./silverscript) today and do not yet have dedicated high-level language constructs.
+
+## Five composability patterns
+
+Most cross-covenant interactions on Kaspa fall into five patterns, ordered from lightest coupling to richest shared interfaces.
+
+| Pattern                    | What the peer checks                                               | Typical use cases                                                |
+| -------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Presence-only co-spend     | Peer `covenant_id` appears among the transaction's inputs          | Covenant-owned custody (`KCC-2`), mint proxies, policy routers   |
+| Closed state observation   | Peer's exact known template and full input/output state transition | Tightly paired controller/asset apps, companion vaults           |
+| Open interface observation | Agreed state prefix + pinned `(template_hash, covenant_id)`        | Permissionless DEXs, lending vaults, asset-agnostic settlement   |
+| Payload-mediated channel   | Structured slices of the shared `tx.payload`                       | Shared parameters, avoiding duplicate witnesses, service routers |
+| Genesis-spawn composition  | Recomputed KIP-20 genesis `covenant_id` of newly created outputs   | Factories, pair registries, market creators launching sub-apps   |
+
+### 1. Presence-only co-spend (delegated authority)
+
+The lightest form of composition is a **presence check**: covenant `A` stores the `covenant_id` of an authority covenant `B`, and allows a privileged transition whenever at least one valid input belonging to `B` participates in the same transaction (`OpCovInputCount(B) > 0`).
+
+This gives a clean one-way dependency: `A` does not need to know `B`'s bytecode, state layout, or upgrade path. `A` simply delegates authorization to whoever can validly spend `B`. That is the exact mechanism behind [KCC-2's `covenant-id/v1` authority scheme](./kccs#kcc-2-authority-schemes), which lets a vault, order book, or DEX take custody of a [KCC-20](./kccs/kcc20) token UTXO.
+
+> [!WARNING]
+> **Presence is not authorization scope.** Knowing that `B` was validly spent in the same transaction does _not_ by itself tell `A` what `B` intended to authorize. If `B` has an unrelated spend path (for example, a routine fee rebalance, heartbeat, or admin action) that does not inspect `A`, an attacker can piggyback a spend of `A` onto that unrelated transaction of `B`. Sound delegation couples both sides: `B` must either inspect `A`'s transition, require a transaction-binding signature covering the spend, or restrict itself to a single dedicated authorization role.
+
+<PatternSnippet
+  status="argent"
+  title="Co-spend custody check"
+  sourceLabel="argent-playground/ag/dex/fixed_asset.ag"
+  sourceHref="https://github.com/argent-lang/argent-playground/blob/master/ag/dex/fixed_asset.ag"
+>
+
+An asset actor delegates custody to an external covenant simply by requiring its owner `covenant_id` to be co-spent (lowering to `OpCovInputCount(owner) > 0`):
+
+```rust
+if (owner_kind == OWNER_KEY) {
+    require(checkSig(owner_sig, pubkey(owner)));
+} else if (owner_kind == OWNER_COVID) {
+    // Valid only when the owning covenant family is spent in this tx.
+    require(cov_id(owner).co_spent());
+}
+```
+
+</PatternSnippet>
+
+### 2. Closed state observation
+
+When covenant `A` and covenant `B` are designed as known peers — for instance, a dedicated issuance controller paired with a token's mint proxy — `A` does not have to stop at presence. `A` can commit to `B`'s exact template bytecode and inspect `B`'s entire input and output group directly via `OpCovInput*` and `OpCovOutput*`.
+
+Because `A` knows `B`'s exact script template, `A` can decode `B`'s current state from the spent input's script preimage, apply policy rules (such as remaining supply caps or governance checks), and verify that `B`'s successor outputs carry the exact next states `A` authorized. Both covenants stay in separate covenant families with independent `covenant_id`s, while still enforcing one joint atomic state transition.
+
+<PatternSnippet
+  status="argent"
+  title="Closed observation of concrete peer actors"
+  sourceLabel="argent/examples/icc/minter.ag"
+  sourceHref="https://github.com/argent-lang/argent/blob/master/examples/icc/minter.ag"
+>
+
+A mint controller imports the compiled asset app's concrete actors (`KCC20Asset::MinterProxy`, `KCC20Asset::KCC20`) and constrains both observed inputs and outputs:
+
+```rust
+entry mint(sig owner_sig, byte[32] recipient_owner, int minted_amount)
+observes asset by self.kcc20_covid {
+    inputs  { proxy: KCC20Asset::MinterProxy }
+    outputs { proxy: KCC20Asset::MinterProxy, recipient: KCC20Asset::KCC20 }
+}
+emits { controller: Minter } {
+    MinterProxyState prev_proxy = state(asset.inputs.proxy);
+    require(prev_proxy.controller_id == self.cov_id);
+    require(amount >= minted_amount);
+
+    // Constrain the observed asset family's exact successor outputs.
+    require asset.outputs become {
+        proxy     <- KCC20Asset::MinterProxy({ controller_id: self.cov_id }),
+        recipient <- KCC20Asset::KCC20({ owner: recipient_owner, amount: minted_amount }),
+    };
+    // ... update controller's own remaining allowance ...
+}
+```
+
+</PatternSnippet>
+
+### 3. Open interface observation (implementation-agnostic composability)
+
+Closed observation breaks down when a protocol — such as a DEX, lending pool, or auction house — needs to work uniformly with _many independently written contracts_ whose exact bytecode was not known when the observer was deployed.
+
+Kaspa covenants support the verification equivalent of VM interfaces in two ways:
+
+#### A. Agreed state layout (dynamic dispatch over templates)
+
+All conforming asset contracts expose the same fixed-width state prefix (for example, an owner, owner scheme, amount, and an opaque 32-byte digest for any implementation-specific extra state). The observer does not hardcode any asset's bytecode. Instead, for each supported asset, the observer stores only two 32-byte commitments:
+
+1. the asset's **`covenant_id`** (identifying which live instance is real);
+2. a stable **`template_hash`** (committing to the non-state bytecode prefix and suffix around the agreed state layout).
+
+At spend time, the transaction supplies the asset's template bytes as an untrusted witness. The observer hashes those bytes against its stored `template_hash`, splices in the expected state fields, and verifies that the peer's spent input and successor outputs match the resulting P2SH commitments. The observer never executes the asset's code — the asset's own input script validates its internal rules in the same transaction, while the observer verifies the shared interface transition.
+
+See also the [Kas-Smiths discussion on Inter-Covenant Communication with Dynamic Dispatch](https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171).
+
+<PatternSnippet
+  status="argent"
+  title="Open interface observation with virtual state capsules"
+  sourceLabel="argent-playground/ag/dex/"
+  sourceHref="https://github.com/argent-lang/argent-playground/tree/master/ag/dex"
+>
+
+A shared `AssetCapsule` exposes the common fields while hiding asset-specific policy behind a `virtual` 32-byte digest. Concrete assets (`FixedToken`, `MintableToken`, `KasAsset`) expand `policy` independently, while `DexPair` stores only `(cov_id, actor_type<AssetCapsule>)` handles and swaps any conforming pair uniformly:
+
+```rust
+// Shared interface layout (capsule.ag)
+state AssetCapsule {
+    byte[32] owner;
+    byte owner_kind;
+    virtual policy; // opaque 32-byte digest to observers
+    int amount;
+}
+
+// Concrete asset expands `policy` privately (fixed_asset.ag)
+state FixedTokenState expands AssetCapsule {
+    policy: FixedPolicy;
+}
+
+// Observer dispatches over stored handles without knowing concrete asset code (dex.ag)
+entry swap()
+observes quote by self.quote_id {
+    inputs  { payment: self.quote_type } // actor_type<AssetCapsule>
+    outputs { reserve: self.quote_type }
+}
+observes base by self.base_id {
+    inputs  { reserve: self.base_type }
+    outputs { payout:  self.base_type }
+}
+```
+
+</PatternSnippet>
+
+#### B. Operation receipts (note fields)
+
+When observing an entire multi-input, multi-output transition would be verbose or expensive for an observer to reconstruct, a convention can add a designated **operation receipt** (or note) field to the peer's output state.
+
+Instead of the observer iterating over every peer input and output to deduce what happened, the peer covenant writes a concise, standardized statement (or BLAKE3 digest of structured statements) into its receipt field — for example, committing to `"transferred X units from A to B"` — and the observer simply verifies that the peer output carries the expected receipt. This is the verification equivalent of an interface return value: the peer proves the operation locally and declares the result for any co-spent observer to check cheaply.
+
+<PatternSnippet
+  status="prototype"
+  title="Standardized operation receipt (note) field"
+>
+
+No dedicated Argent syntax exists for receipt fields yet; contracts following such a convention verify the peer's standardized `last_op` state digest directly in script:
+
+```text
+// Peer covenant commits a standardized receipt in its successor state:
+next_peer.last_op = blake3(TAG_TRANSFER || from || to || amount)
+
+// Co-spent observer inspects the peer's successor state without
+// re-deriving conservation across all of the peer's inputs and outputs:
+require(peer_out.last_op == blake3(TAG_TRANSFER || buyer || self_cov_id || price))
+```
+
+</PatternSnippet>
+
+### 4. Payload-mediated communication (shared transaction channel)
+
+Every input script in a v1 transaction can inspect the same transaction `payload` using `OpTxPayloadLen` and `OpTxPayloadSubstr`. That turns `tx.payload` into an **ephemeral, read-only message bus** shared across all co-spent covenants for the lifetime of one transaction:
+
+- **Eliminating duplicated witnesses:** When multiple co-spent inputs need the same large data (settlement parameters, merkle proofs, order descriptors, or ZK verifying keys and public inputs), placing that data once in `tx.payload` avoids repeating it inside every input's signature script.
+- **Decoupling callers from service covenants:** A caller covenant and a shared service covenant do not need to inspect each other's full P2SH state layout. The caller requires the service covenant to be co-spent and constrains the slice of `tx.payload` representing its request (for example, an application identifier and digest), while the service covenant validates the remaining slice against its own on-chain state and enforces the shared policy.
+
+Because `tx.payload` is global to the entire transaction, covenants sharing a payload channel must enforce clean **framing and boundary hygiene**:
+
+- Either pin exact offsets/lengths (when one caller–service pair owns the payload), or use a self-delimiting envelope / domain-tagged header so two independent covenant flows in the same transaction cannot alias the same payload bytes.
+- Never let a caller accept an unframed substring without checking both the service's presence and that the service validates the exact slice bound to the caller's request.
+
+<PatternSnippet
+  status="prototype"
+  title="Shared transaction payload channel (conceptual L1 script sketch)"
+>
+
+This pattern uses native KIP-17/KIP-20 opcodes directly (`OpCovInputCount`, `OpTxPayloadLen`, `OpTxPayloadSubstr`) and has no dedicated high-level Argent construct yet:
+
+```text
+// Transaction payload layout (agreed framing):
+//   [0..32]   domain_tag + request_id (bound by caller)
+//   [32..64]  policy_key_hash         (validated by service)
+//   [64..]    shared_args             (read by both)
+
+// Caller covenant input:
+require(OpCovInputCount(service_cov_id) > 0)
+require(OpTxPayloadLen() >= 64)
+require(OpTxPayloadSubstr(0, 32) == expected_request_hash)
+// ... use OpTxPayloadSubstr(64, end) for caller-side checks ...
+
+// Service covenant input (co-spent in the same tx):
+require(OpTxPayloadSubstr(32, 64) == self.active_policy_key_hash)
+// ... validate service policy and preserve service state ...
+```
+
+</PatternSnippet>
+
+### 5. Genesis-spawn composition (atomic sub-app creation)
+
+Factories, pair registries, and prediction-market creators often need to launch a brand-new child covenant family atomically inside a parent transition — and record the child's newly derived `covenant_id` in the parent's state.
+
+As noted in [Covenant State](./covenant-state#auth-groups-and-covenant-groups), auth and covenant output groups (`OpAuthOutput*`, `OpCovOutput*`) exclude genesis outputs. Instead of scanning the entire transaction, the parent script accepts the global output indices of the child's initial outputs as untrusted witnesses, **recomputes the KIP-20 genesis `covenant_id` preimage on-chain** from its own outpoint plus those outputs' values and scripts, and checks that hash against `OpOutputCovenantId` on the first spawned output. Because consensus derives that output's `covenant_id` from the _complete_ ordered genesis output group, hash collision resistance proves in one check that no extra or altered outputs snuck into the spawned child family.
+
+<PatternSnippet
+  status="argent"
+  title="Atomic child covenant launch with spawns"
+  sourceLabel="argent/examples/spawns.ag"
+  sourceHref="https://github.com/argent-lang/argent/blob/master/examples/spawns.ag"
+>
+
+`spawns` lowers to the on-chain KIP-20 genesis `covenant_id` recomputation and binds the derived `pair_id` so the parent can store or register it immediately:
+
+```rust
+entry launch(int left_amount, int right_amount)
+spawns new_pair by pair_id {
+    outputs {
+        left:  self.pair_type,
+        right: self.pair_type,
+    }
+}
+emits next: Controller {
+    require new_pair.outputs become {
+        left  <- self.pair_type({ amount: left_amount }),
+        right <- self.pair_type({ amount: right_amount }),
+    };
+    // `pair_id` is now authenticated as the exact genesis covenant_id
+    // of those two outputs and can be saved in `next` state.
+    become next <- Controller({ pair_type: pair_type, launches: launches + 1 });
+}
+```
+
+</PatternSnippet>
+
+## Worked example: shared service covenants and upgradable ZK routers
+
+Combining **presence-only co-spend** and a **shared transaction payload** solves a practical problem for immutable covenants: how to stay immutable while delegating an evolving cryptographic or policy dependency to a separate, opt-in covenant.
+
+Consider an application covenant that verifies BN254 Groth16 proofs via [`OpZkPrecompile(0x20)`](./inline-zk) (for example, a RISC Zero Groth16 verifier whose wrapper parameters can change after a prover SDK upgrade such as [GHSA-g6qg-9j8p-7j87](./inline-zk#risc-zero-advisory-and-remediation)). Hardcoding a verifying key or control root directly into every user UTXO forces a manual migration whenever proving parameters rotate.
+
+With a **verifier router covenant**, the responsibilities split cleanly across two co-spent inputs:
+
+```mermaid
+flowchart LR
+    classDef app fill:#eef9ef,stroke:#4d9f5b,color:#132016
+    classDef router fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
+    classDef pl fill:#eef6ff,stroke:#4b82c3,color:#172033
+
+    APP["App covenant input<br/>1. require router cov_id co-spent<br/>2. bind app image_id + journal<br/>3. run OpZkPrecompile(0x20)"]:::app
+    PL["tx.payload<br/>verifying key / control params<br/>+ proof inputs"]:::pl
+    RTR["Verifier router input<br/>1. validate params in payload<br/>against active on-chain state<br/>2. preserve router UTXO"]:::router
+
+    APP -->|"reads vk / params"| PL
+    RTR -->|"validates active vk / params"| PL
+    APP -. "co-spent check" .-> RTR
+```
+
+1. **App covenant (immutable, holds user funds):** Opts into a specific router by storing the router's `covenant_id`. On spend, it checks that the router `covenant_id` is co-spent in the transaction, reads the verifying key / wrapper parameters from the agreed `tx.payload` slice, binds its own application `image_id` and state-transition journal, and runs `OpZkPrecompile(0x20)`.
+2. **Verifier router covenant (shared service, holds no user funds):** Stores the currently active verifying key hash (or parameter commitment) in its own UTXO state. On spend, it checks that the payload parameters match its active state and recreates itself unchanged. Under its governance rule, it can rotate to patched parameters — immediately upgrading every app that opted into it without migrating user UTXOs.
+
+Any shared service or router covenant must enforce two critical invariants:
+
+- **No unvalidated spend paths:** Every spend path on the router covenant that preserves its `covenant_id` must enforce parameter validation (or be cryptographically isolated from caller spends). If a router had an unconstrained admin or housekeeping spend that ignored `tx.payload`, an attacker could co-spend the router during an admin transaction to bypass parameter checks.
+- **Revocation across parallel replicas:** A single router UTXO serializes spends to one per block (~10/s), so busy routers will typically split into parallel replicas (the same expand-and-contract pattern used by [`PublicMint` and `TokenSeed`](./kccs/kcc20#expand-and-contract-frontiers-publicmint-and-tokenseed)). When revoking compromised parameters, governance must either replace every live replica or enforce epoch/time-bounded validity so stale replicas cannot remain spendable.
+
+<PatternSnippet
+  status="prototype"
+  title="Opt-in Groth16 verifier router via co-spend + payload"
+>
+
+Conceptual L1 script flow (written directly in Silverscript today; no dedicated router syntax in Argent yet):
+
+```text
+// App covenant (immutable):
+require(OpCovInputCount(self.router_cov_id) > 0)
+vk_and_params = OpTxPayloadSubstr(0, PARAMS_LEN)
+require(groth16_verify(vk_and_params, proof, [self.image_id, old_root, new_root]))
+// ... validate app successor output with new_root ...
+
+// Verifier router covenant (shared service):
+// Standard verify path — always checks payload parameters:
+vk_and_params = OpTxPayloadSubstr(0, PARAMS_LEN)
+require(blake3(vk_and_params) == self.active_params_hash)
+// ... recreate router UTXO with identical active_params_hash ...
+```
+
+</PatternSnippet>
+
+## How the stack supports these patterns
+
+Because every pattern above is built from native L1 transaction rules, you can adopt them at whichever layer fits your project:
+
+| Layer                              | What it gives you                                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **[Silverscript](./silverscript)** | Direct access to `OpCov*`, `OpOutput*`, `OpTxPayloadLen` / `OpTxPayloadSubstr`, and `validateOutputState` for any pattern     |
+| **[KCCs](./kccs)**                 | Standardized state layouts ([KCC-1](./kccs), [KCC-20](./kccs/kcc20)) and co-spend authority schemes (`covenant-id/v1`, KCC-2) |
+| **[Argent](./argent)**             | Checked source-level abstractions for `.co_spent()`, closed/open `observes`, `actor_type<State>` capsules, and `spawns`       |
+
+Continue with [Inline ZK](./inline-zk) for direct in-script proof verification, or inspect working open-ICC and multi-app demos in [`argent-lang/argent-playground`](https://github.com/argent-lang/argent-playground).

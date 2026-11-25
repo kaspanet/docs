@@ -42,6 +42,7 @@ const sections: {
       { slugs: ["programmability", "argent"] },
       { slugs: ["programmability", "kccs"] },
       { slugs: ["programmability", "kccs", "kcc20"] },
+      { slugs: ["programmability", "composability"] },
       { slugs: ["programmability", "decision-guide"] },
       { slugs: ["programmability", "references"] },
     ],

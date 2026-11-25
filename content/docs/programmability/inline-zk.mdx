@@ -67,6 +67,7 @@ On November 11, 2026, RISC Zero disclosed [GHSA-g6qg-9j8p-7j87](https://github.c
 
 - **New deployments:** Use Groth16 (`0x20`). If proving with RISC Zero, use `kaspa-txscript-zk-sdk >= 2.2.0`, Silverscript `>= 1.0.2` (`r0.g16.verify`), and `RISC Zero >= 3.1.0`. Do not deploy new covenants using `0x21`.
 - **Existing deployments:** Review any live UTXOs locked under affected RISC Zero Groth16 or STARK parameters and migrate funds or state through your application's recovery path. Spending existing legacy UTXOs remains consensus-valid using the prior SDK release.
+- **Designing for parameter upgrades:** Covenants that want opt-in upgradability for evolving Groth16 proving parameters without migrating user UTXOs can delegate parameter validation to a co-spent [verifier router covenant](./composability#worked-example-shared-service-covenants-and-upgradable-zk-routers).
 
 ## The covenant still owns the output
 
