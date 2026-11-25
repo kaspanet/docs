@@ -39,17 +39,16 @@ Four L1 primitives make this work cleanly without assuming any single covenant o
 > [!NOTE]
 > The main text on this page stays language-agnostic and describes L1 transaction mechanics directly. Color-coded snippet boxes illustrate each pattern across three tiers: **Silverscript · L1 Opcodes** (raw L1 script calls), **Argent · Implemented** (working [Argent](./argent) syntax today), and **Argent · Proposed Syntax** (design prototypes not yet implemented in the compiler).
 
-## Five ICC patterns
+## Four ICC patterns
 
-Most cross-covenant interactions on Kaspa fall into five patterns, ordered from lightest coupling to richest shared interfaces.
+Most cross-covenant interactions on Kaspa fall into four patterns, distinguished by **what the caller binds to** on its peer:
 
-| Pattern                                    | What the peer checks                                               | Typical use cases                                                    |
-| ------------------------------------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Presence-only co-spend                     | Peer `covenant_id` appears among the transaction's inputs          | Covenant-owned custody (`KCC-2`), mint proxies, policy routers       |
-| Closed state observation                   | Peer's exact known template and full input/output state transition | Tightly paired controller/asset apps, companion vaults               |
-| Open interface observation                 | Agreed state prefix + pinned `(template_hash, covenant_id)`        | Permissionless DEXs, lending vaults, asset-agnostic settlement       |
-| Payload-mediated channel & service queries | Structured slices / statements in the shared `tx.payload`          | Dynamic fee/policy hooks, shared oracle/KIP-21 verification, routers |
-| Genesis-spawn composition                  | Recomputed KIP-20 genesis `covenant_id` of newly created outputs   | Factories, pair registries, market creators launching sub-apps       |
+| Pattern                              | What the caller binds to                                                       | Typical use cases                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| 1. Presence-only co-spend            | Peer `covenant_id` only                                                        | Covenant-owned custody (`KCC-2`), mint proxies, delegated authority  |
+| 2. State observation (closed & open) | Peer's fixed state layout (`template_hash` pinned at compile time or in state) | Controller/asset pairs, permissionless DEXs, asset-agnostic vaults   |
+| 3. Payload-mediated dynamic dispatch | Peer `covenant_id` + message format in `tx.payload` (no shared state layout)   | Dynamic fee/policy hooks, shared oracle/KIP-21 verification, routers |
+| 4. Genesis-spawn composition         | Recomputed KIP-20 genesis `covenant_id` of newly created child outputs         | Factories, pair registries, market creators launching sub-apps       |
 
 ### 1. Presence-only co-spend (delegated authority)
 
@@ -80,11 +79,15 @@ if (owner_kind == OWNER_KEY) {
 
 </PatternSnippet>
 
-### 2. Closed state observation
+### 2. State observation (closed and open)
 
-When covenant `A` and covenant `B` are designed as known peers — for instance, a dedicated issuance controller paired with a token's mint proxy — `A` does not have to stop at presence. `A` can commit to `B`'s exact template bytecode and inspect `B`'s entire input and output group directly via `OpCovInput*` and `OpCovOutput*`.
+When covenant `A` needs to inspect or constrain _how_ covenant `B`'s state changes, `A` reads `B`'s input and output group via `OpCovInput*` and `OpCovOutput*` and authenticates `B`'s script against a 32-byte **`template_hash`** (committing to the non-state prefix and suffix of `B`'s redeem script). At spend time, `B`'s foreign template bytes arrive as an untrusted witness checked against that `template_hash` — `A` never embeds `B`'s full bytecode or executes `B`'s logic. Instead, `A` decodes `B`'s input state from the script preimage, checks its rules, and verifies that `B`'s successor outputs match the resulting P2SH commitments.
 
-Because `A` knows `B`'s exact script template, `A` can decode `B`'s current state from the spent input's script preimage, apply policy rules (such as remaining supply caps or governance checks), and verify that `B`'s successor outputs carry the exact next states `A` authorized. Both covenants stay in separate covenant families with independent `covenant_id`s, while still enforcing one joint atomic state transition.
+The same underlying L1 mechanism operates in two binding modes:
+
+#### A. Closed observation (compile-time bound)
+
+When `A` and `B` are designed as known peers — for instance, a dedicated issuance controller paired with a token's mint proxy — `A` knows `B`'s concrete implementation at compile time, pins `B`'s `template_hash` directly in its script, and reads `B`'s full concrete state layout. Both covenants remain in separate covenant families with independent `covenant_id`s while enforcing one joint atomic transition.
 
 <PatternSnippet
   status="argent"
@@ -124,29 +127,24 @@ emits { controller: Minter } {
 
 </PatternSnippet>
 
-### 3. Open interface observation (implementation-agnostic composability)
+#### B. Open observation and state capsules (runtime-bound)
 
-Closed observation breaks down when a protocol — such as a DEX, lending pool, or auction house — needs to work uniformly with _many independently written contracts_ whose exact bytecode was not known when the observer was deployed.
+When a protocol — such as a DEX, lending pool, or auction house — needs to work uniformly with _many independently written contracts_ unknown at compile time, it cannot pin one concrete `template_hash` in script. Instead, the observer fixes only an **agreed, fixed-width public state layout** and stores each supported peer's `(covenant_id, template_hash)` pair in runtime state. One compiled observer can then interact with any conforming peer without recompiling.
 
-Kaspa covenants support the verification equivalent of VM interfaces over state in two ways:
+Because inspecting foreign state in Kaspa Script relies on **fixed byte offsets** inside `[prefix][state][suffix]`, open observation immediately requires a way for different implementations (a fixed-supply token, a mintable token, a vesting token) to carry different private state without changing the public state shape. The solution is a **state capsule**:
 
-#### A. Agreed state layout (open state interfaces)
-
-All conforming asset contracts expose the same fixed-width state prefix (for example, an owner, owner scheme, amount, and an opaque 32-byte digest for any implementation-specific extra state). The observer does not hardcode any asset's bytecode. Instead, for each supported asset, the observer stores only two 32-byte commitments:
-
-1. the asset's **`covenant_id`** (identifying which live instance is real);
-2. a stable **`template_hash`** (committing to the non-state bytecode prefix and suffix around the agreed state layout).
-
-At spend time, the transaction supplies the asset's template bytes as an untrusted witness. The observer hashes those bytes against its stored `template_hash`, splices in the expected state fields, and verifies that the peer's spent input and successor outputs match the resulting P2SH commitments. The observer never executes the asset's code — the asset's own input script validates its internal rules in the same transaction, while the observer verifies the shared interface transition.
+- Every conforming implementation exposes the exact same fixed-width public fields (for example, `owner`, `owner_kind`, `amount`).
+- Any implementation-specific private state (arbitrarily structured or variable-sized) is compressed into a **fixed 32-byte digest slot** (such as a `virtual` field in Argent's `AssetCapsule`, or `extension_commitment` in [KCC-20's 112-byte `KCC20State`](./kccs/kcc20#state-layout-and-transfer-abi)).
+- The observer parses the uniform capsule fields and preserves that opaque 32-byte digest unchanged, while each concrete contract expands and validates its own preimage internally.
 
 <PatternSnippet
   status="argent"
-  title="Open interface observation with virtual state capsules"
+  title="Open observation with virtual state capsules"
   sourceLabel="argent-playground/ag/dex/"
   sourceHref="https://github.com/argent-lang/argent-playground/tree/master/ag/dex"
 >
 
-A shared `AssetCapsule` exposes the common fields while hiding asset-specific policy behind a `virtual` 32-byte digest. Concrete assets (`FixedToken`, `MintableToken`, `KasAsset`) expand `policy` independently, while `DexPair` stores only `(cov_id, actor_type<AssetCapsule>)` handles and swaps any conforming pair uniformly:
+A shared `AssetCapsule` fixes the public layout while hiding asset-specific policy behind a `virtual` 32-byte digest. Concrete assets (`FixedToken`, `MintableToken`, `KasAsset`) expand `policy` independently, while `DexPair` stores only `(cov_id, actor_type<AssetCapsule>)` handles and swaps any conforming pair uniformly:
 
 ```rust
 // Shared interface layout (capsule.ag)
@@ -176,11 +174,9 @@ observes base by self.base_id {
 
 </PatternSnippet>
 
-#### B. Operation receipts (note fields)
+#### C. Operation receipts (note fields)
 
-When observing an entire multi-input, multi-output transition would be verbose or expensive for an observer to reconstruct, a convention can add a designated **operation receipt** (or note) field to the peer's output state.
-
-Instead of the observer iterating over every peer input and output to deduce what happened, the peer covenant writes a concise, standardized statement (or BLAKE3 digest of structured statements) into its receipt field — for example, committing to `"transferred X units from A to B"` — and the observer simply verifies that the peer output carries the expected receipt. This is the verification equivalent of an interface return value: the peer proves the operation locally and declares the result for any co-spent observer to check cheaply.
+When observing an entire multi-input, multi-output transition would be verbose or expensive to reconstruct, a convention can include a designated **operation receipt** (or note) field inside the agreed state layout. Instead of iterating over every peer input and output to deduce what happened, the peer covenant writes a concise standardized digest of the operation it just verified (for example, committing to `"transferred X units from A to B"`), and the observer checks that single receipt field on the peer's successor output.
 
 <PatternSnippet
   status="argent"
@@ -207,16 +203,18 @@ require peer.outputs become { target <- self.peer_type(expected) };
 
 </PatternSnippet>
 
-### 4. Payload-mediated communication and dynamic dispatch
+### 3. Payload-mediated communication and dynamic dispatch
 
-State observation works when the caller cares about _how a peer's state changed_. Sometimes, however, what a covenant wants from a peer is **an answer to a question about the current transaction**: _what fee rate applies to this swap? What is the authenticated oracle price or KIP-21 block timestamp? Is this withdrawal authorized under current policy?_
+Even **open** state observation is still static in one important way: the observer remains bound to a **fixed on-chain state structure** (the agreed capsule layout), and the peer's UTXO state must conform to it.
 
-Every input script in a v1 transaction can inspect the same transaction `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`. That turns `tx.payload` into an **ephemeral, read-only message bus** shared across all co-spent covenants for one transaction, enabling two closely related patterns:
+Sometimes a covenant does not care how its peer stores state at all — it simply wants **an answer to a question about the current transaction**: _what fee rate applies to this swap? What is the authenticated oracle price or KIP-21 block timestamp? Is this withdrawal authorized under current policy?_
 
-- **Shared verification and witness deduplication:** One service input can verify expensive data once (a signed oracle report, a KIP-21 sequencing commitment opening, or shared settlement parameters) and expose the authenticated statement in `tx.payload` for multiple co-spent caller inputs to read without repeating the verification or witness bytes.
-- **Verification-oriented dynamic dispatch ("propose the result, then verify it"):** Rather than calling a callee at runtime, the transaction composer places a structured **statement record** — `(method, arguments, proposed result)` — into the service input's section of `tx.payload`. Both sides verify the same bytes independently:
-  - **The caller** resolves the service input (for example, the leader of a stored `covenant_id`), locates the statement inside that input's payload section, checks that the method and arguments match what it intended, and uses the proposed result in its own validation.
-  - **The callee (service)** verifies its own section header and every statement in its section against its internal state, witnesses, and rules. Any entrypoint that does _not_ serve calls requires an **empty section** for its input, so an admin or housekeeping spend can run cleanly while rejecting any transaction that claims it served a call.
+Every input script in a v1 transaction can inspect the same transaction `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`. That turns `tx.payload` into an **ephemeral, read-only message bus** shared across all co-spent covenants for one transaction, removing the static state-layout constraint entirely:
+
+- **Decoupled dynamic dispatch ("propose the result, then verify it"):** Rather than binding to the callee's state structure or template, both sides bind **only to the message format in `tx.payload`**. The transaction composer places a structured **statement record** — `(method, arguments, proposed result)` — into the service input's section of `tx.payload`:
+  - **The caller** resolves the service input (for example, the leader of a stored `covenant_id`), reads the selected statement from that input's payload section, checks that the method and arguments match what it intended, and uses the proposed result.
+  - **The callee (service)** verifies its own section header and every statement in its section against whatever internal state, witnesses, and rules it chooses — it can use any state layout it wants, or even recreate its UTXO unchanged. Any entrypoint that does _not_ serve calls requires an **empty section** for its input, so an admin or housekeeping spend can run cleanly while rejecting any transaction that claims it served a call.
+- **Shared verification and witness deduplication:** One service input can verify expensive data once (a signed oracle report, a KIP-21 sequencing commitment opening, or shared settlement parameters) and serve the authenticated statement in `tx.payload` to multiple co-spent caller inputs in the same transaction without repeating the verification or witness bytes.
 
 Because `tx.payload` is global to the transaction and Kaspa Script has no unbounded loops, independent contracts sharing a payload channel need a clean **framing convention** (for example, a versioned envelope prefix and a fixed-width section directory indexed by transaction input so callers jump directly to a statement and callees verify their full section within a known bound). See the [Kas-Smiths proposal on Inter-Covenant Communication with Dynamic Dispatch](https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171) for the full design discussion.
 
@@ -294,7 +292,7 @@ An entry with two `serve` clauses would expect exactly two records in its payloa
 
 </PatternSnippet>
 
-### 5. Genesis-spawn composition (atomic sub-app creation)
+### 4. Genesis-spawn composition (atomic sub-app creation)
 
 Factories, pair registries, and prediction-market creators often need to launch a brand-new child covenant family atomically inside a parent transition — and record the child's newly derived `covenant_id` in the parent's state.
 
