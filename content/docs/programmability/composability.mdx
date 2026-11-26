@@ -335,62 +335,65 @@ emits next: Controller {
 
 ## Worked example: shared service covenants and upgradable ZK routers
 
-Combining **presence-only co-spend** and a **shared transaction payload** solves a practical problem for immutable covenants: how to stay immutable while delegating an evolving cryptographic or policy dependency to a separate, opt-in covenant.
+Choosing between **state observation (raw read)** and **payload dynamic dispatch (computed read)** shows up clearly in a real L1 problem: how an immutable covenant can delegate an evolving cryptographic dependency to an opt-in shared covenant.
 
 Consider an application covenant that verifies BN254 Groth16 proofs via [`OpZkPrecompile(0x20)`](./inline-zk) (for example, a RISC Zero Groth16 verifier whose wrapper parameters can change after a prover SDK upgrade such as [GHSA-g6qg-9j8p-7j87](./inline-zk#risc-zero-advisory-and-remediation)). Hardcoding a verifying key or control root directly into every user UTXO forces a manual migration whenever proving parameters rotate.
 
-With a **verifier router covenant**, the responsibilities split cleanly across two co-spent inputs:
+### Simpler default: a key-registry router (state observation)
+
+If the router only acts as a **registry of the currently active verifying key** (storing `active_vk_hash` in its UTXO state), it does _not_ need `tx.payload` or dynamic dispatch — a straightforward state read (Pattern 2) is both simpler and safer:
 
 ```mermaid
 flowchart TB
     classDef app fill:#eef9ef,stroke:#4d9f5b,color:#132016
     classDef router fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
-    classDef pl fill:#eef6ff,stroke:#4b82c3,color:#172033
 
-    APP["App covenant input<br/>1. require router cov_id co-spent<br/>2. bind app image_id + journal<br/>3. run OpZkPrecompile(0x20)"]:::app
-    PL["tx.payload<br/>verifying key / control params<br/>+ proof inputs"]:::pl
-    RTR["Verifier router input<br/>1. validate params in payload<br/>against active on-chain state<br/>2. preserve router UTXO"]:::router
+    RTR["Key-registry router input<br/>state: active_vk_hash<br/>(recreates itself unchanged, or rotates under governance)"]:::router
+    APP["App covenant input<br/>1. observe router input state -> read active_vk_hash<br/>2. check blake3(verifying_key) == active_vk_hash<br/>3. bind image_id + journal and run OpZkPrecompile(0x20)"]:::app
 
-    APP -->|"reads vk / params"| PL
-    RTR -->|"validates active vk / params"| PL
-    APP -. "co-spent check" .-> RTR
+    APP -. "reads active_vk_hash" .-> RTR
 ```
 
-1. **App covenant (immutable, holds user funds):** Opts into a specific router by storing the router's `covenant_id`. On spend, it checks that the router `covenant_id` is co-spent in the transaction, reads the verifying key / wrapper parameters from the agreed `tx.payload` slice, binds its own application `image_id` and state-transition journal, and runs `OpZkPrecompile(0x20)`.
-2. **Verifier router covenant (shared service, holds no user funds):** Stores the currently active verifying key hash (or parameter commitment) in its own UTXO state. On spend, it checks that the payload parameters match its active state and recreates itself unchanged. Under its governance rule, it can rotate to patched parameters — immediately upgrading every app that opted into it without migrating user UTXOs.
+1. **Key-registry router (shared service, holds no user funds):** Stores `active_vk_hash` in its state and exposes a permissionless witness spend that recreates itself unchanged, plus a governed rotation path to swap in patched keys.
+2. **App covenant (immutable, holds user funds):** Stores the router's `(router_cov_id, router_template_hash)`. On spend, it observes the co-spent router input, reads `active_vk_hash` directly from the router's authenticated state, checks `blake3(verifying_key) == active_vk_hash`, and runs `OpZkPrecompile(0x20)`.
 
-Any shared service or router covenant must enforce two critical invariants:
-
-- **No unvalidated spend paths:** Every spend path on the router covenant that preserves its `covenant_id` must either enforce parameter validation or require an empty payload section (as in the dynamic-dispatch pattern above). If a router had an unconstrained admin or housekeeping spend that ignored `tx.payload`, an attacker could co-spend the router during an admin transaction to bypass parameter checks.
-- **Revocation across parallel replicas:** A single router UTXO serializes spends to one per block (~10/s), so busy routers will typically split into parallel replicas (the same expand-and-contract pattern used by [`PublicMint` and `TokenSeed`](./kccs/kcc20#expand-and-contract-frontiers-publicmint-and-tokenseed)). When revoking compromised parameters, governance must either replace every live replica or enforce epoch/time-bounded validity so stale replicas cannot remain spendable.
+Because the app reads `active_vk_hash` straight from the router's spent input state rather than relying on presence-only co-spend, there is no risk of piggybacking on an unvalidated admin spend — even during a governance transaction, the router's spent input still carries only the previously authorized key hash.
 
 <PatternSnippet
   status="silverscript"
-  title="Opt-in Groth16 verifier router via co-spend + payload"
+  title="Opt-in Groth16 key-registry read via state observation"
 >
 
-Written directly with Silverscript's covenant, payload, and Groth16 builtins:
+Written directly with Silverscript's covenant introspection and Groth16 builtins (or expressed with a single `observes` clause in Argent):
 
 ```solidity
 // --- App covenant (immutable, holds user funds) ---
 require(OpCovInputCount(router_cov_id) > 0);
-require(OpTxPayloadLen() >= VK_LEN);
-byte[] verifying_key = OpTxPayloadSubstr(0, VK_LEN);
+int router_in = OpCovInputIdx(router_cov_id, 0);
+
+// Authenticate the router input's template and read its active_vk_hash:
+RouterState router = readInputStateWithTemplate(
+    router_in,
+    ROUTER_PREFIX_LEN,
+    ROUTER_SUFFIX_LEN,
+    router_template_hash
+);
+
+require(blake3(verifying_key) == router.active_vk_hash);
 g16.verify(verifying_key, proof, image_id, journal_digest);
 // ... validate app successor output with new_root ...
-
-// --- Verifier router covenant (shared service) ---
-// Standard verify entrypoint:
-require(OpTxPayloadLen() >= VK_LEN);
-byte[] verifying_key = OpTxPayloadSubstr(0, VK_LEN);
-require(blake3(verifying_key) == active_vk_hash);
-// ... recreate router UTXO with identical active_vk_hash ...
-
-// Admin rotation entrypoint (prevents piggyback verification during governance):
-// require(OpTxPayloadLen() == 0);
 ```
 
 </PatternSnippet>
+
+### When to reach for a payload channel or dynamic dispatch
+
+Step up to Pattern 3 (`tx.payload` / computed read) only when a plain registry read is no longer enough — for example, when multiple co-spent app inputs want to share one large verifying key in `tx.payload` without repeating it in every signature script, or when the router runs richer verification/routing logic itself (such as verifying a proof once and serving the result to several callers, or choosing dynamically among proof systems and epochs).
+
+### Operational invariants for shared routers
+
+- **Revocation across parallel replicas (all routers):** A single router UTXO serializes spends to one per block (~10/s), so busy routers will typically split into parallel replicas (the same expand-and-contract pattern used by [`PublicMint` and `TokenSeed`](./kccs/kcc20#expand-and-contract-frontiers-publicmint-and-tokenseed)). When revoking compromised parameters, governance must either replace every live replica or enforce epoch/time-bounded validity so stale replicas cannot remain spendable.
+- **No unvalidated spend paths (payload / presence routers):** Whenever callers rely on co-spend presence plus `tx.payload` instead of reading the router's state directly, every spend path preserving the router's `covenant_id` must either validate the payload or require an empty payload section so admin or housekeeping spends cannot be piggybacked.
 
 ## How the stack supports these patterns
 
