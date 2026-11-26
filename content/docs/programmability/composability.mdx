@@ -219,6 +219,9 @@ Every input script in a v1 transaction can inspect the same transaction `payload
 
 Because `tx.payload` is global to the transaction and Kaspa Script has no unbounded loops, independent contracts sharing a payload channel need a clean **framing convention** (for example, a versioned envelope prefix and a fixed-width section directory indexed by transaction input so callers jump directly to a statement and callees verify their full section within a known bound). See the [Kas-Smiths proposal on Inter-Covenant Communication with Dynamic Dispatch](https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171) for the full design discussion.
 
+> [!IMPORTANT]
+> **Avoid ad-hoc `tx.payload` protocols for open composability:** Because `tx.payload` is a single transaction-wide field (already shared with based apps, messaging, and metadata conventions), two independent covenants that each assume they own byte `0` cannot be co-spent in the same transaction. Prefer **Pattern 2 (state observation)** for open cross-app composition today, reserve ad-hoc payload layouts for tightly coupled flows you control end to end, and wait for a shared payload-framing KCC before relying on `tx.payload` for ecosystem-wide dynamic dispatch.
+
 <PatternSnippet
   status="silverscript"
   title="Shared payload section checks in raw Silverscript"
@@ -386,9 +389,9 @@ g16.verify(verifying_key, proof, image_id, journal_digest);
 
 </PatternSnippet>
 
-### When to reach for a payload channel or dynamic dispatch
+### When a payload channel or dynamic dispatch makes sense
 
-Step up to Pattern 3 (`tx.payload` / computed read) only when a plain registry read is no longer enough — for example, when multiple co-spent app inputs want to share one large verifying key in `tx.payload` without repeating it in every signature script, or when the router runs richer verification/routing logic itself (such as verifying a proof once and serving the result to several callers, or choosing dynamically among proof systems and epochs).
+Pattern 3 (`tx.payload` / computed read) only becomes necessary when a plain registry read is no longer enough — for example, when multiple co-spent app inputs want to share one large verifying key in `tx.payload` without repeating it in every signature script, or when the router runs richer verification/routing logic itself (such as verifying a proof once and serving the result to several callers, or choosing dynamically among proof systems and epochs). For open multi-app routers, this path depends on a shared payload-framing KCC so independent covenants do not collide on `tx.payload`.
 
 ### Operational invariants for shared routers
 
