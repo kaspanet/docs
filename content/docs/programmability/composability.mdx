@@ -1,6 +1,6 @@
 ---
 title: Inter-Covenant Communication (ICC)
-description: "How independent L1 covenants compose atomically in one transaction through co-spending, mutual inspection, shared interfaces, and transaction payloads."
+description: "How independent L1 covenants compose atomically in one transaction through co-spending, mutual inspection, shared interfaces, and dynamic dispatch."
 ---
 
 On an account-based chain, contracts compose through imperative calls: contract `A` invokes a method on contract `B`, and the VM executes `B`'s code inline. Kaspa's L1 covenant model works differently.
@@ -8,24 +8,28 @@ On an account-based chain, contracts compose through imperative calls: contract 
 On Kaspa, independent covenants compose through **Inter-Covenant Communication (ICC)** — **co-spending in the same atomic transaction**. Every input script in the transaction executes and must succeed, or the entire transaction is rejected. Neither covenant runs the other's code; instead, each covenant validates its own transition and inspects the transaction to verify what its peer covenant is doing alongside it.
 
 ```mermaid
-flowchart TB
+flowchart LR
     classDef a fill:#eef9ef,stroke:#4d9f5b,color:#132016
     classDef b fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
-    classDef tx fill:#eef6ff,stroke:#4b82c3,color:#172033
+    classDef tx fill:#f4f7fb,stroke:#8794a8,color:#172033
+    classDef chk fill:#fff7e8,stroke:#c58b2a,color:#1f1b12
 
     subgraph TX["One atomic v1 transaction"]
-        direction TB
-        IA["Input: Covenant A<br/>state_0"]:::a
-        IB["Input: Covenant B<br/>state_0"]:::b
-        PL["Shared tx.payload<br/>readable by all inputs"]:::tx
-        OA["Output(s): Covenant A<br/>state_1"]:::a
-        OB["Output(s): Covenant B<br/>state_1"]:::b
+        direction LR
+        IA["Covenant A<br/>in: state_0"]:::a
+        IB["Covenant B<br/>in: state_0"]:::b
+        PL["Optional bus<br/>sigscript / payload"]:::tx
 
-        IA --> OA
-        IB --> OB
-        IA <-.->|"mutual inspection"| IB
-        IA -. "reads slice" .-> PL
-        IB -. "reads slice" .-> PL
+        CHK["Co-spent validation<br/>mutual state/bus<br/>inspection<br/>all scripts must pass"]:::chk
+
+        OA["Covenant A<br/>out: state_1"]:::a
+        OB["Covenant B<br/>out: state_1"]:::b
+
+        IA --> CHK
+        IB --> CHK
+        PL -. "slice" .-> CHK
+        CHK --> OA
+        CHK --> OB
     end
 ```
 
@@ -33,8 +37,8 @@ Four L1 primitives make this work cleanly without assuming any single covenant o
 
 - **All-or-nothing transaction atomicity:** If any input script fails, none of the state transitions take effect.
 - **Scoped family identity (`covenant_id`):** [KIP-20](./covenant-state#covenant-ids) tags inputs and outputs by covenant family, and `OpCovInput*` / `OpCovOutput*` let each script locate a peer covenant's exact slice of the transaction even when unrelated fee, change, or third-party covenant inputs are present.
-- **Cross-input and output introspection:** Any input script can read other inputs' outpoints and script public keys, inspect outputs' values, scripts, and covenant bindings (`OpOutputCovenantId`, `OpOutputAuthorizingInput`), and verify preimages against P2SH hashes.
-- **Shared transaction payload:** Every input script can inspect the same transaction `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`, giving co-spent covenants an ephemeral shared channel for the duration of one transaction.
+- **Cross-input and output introspection:** Any input script can read other inputs' outpoints, script public keys, and signature scripts (`OpTxInputScriptSigSubstr`), inspect outputs' values, scripts, and covenant bindings (`OpOutputCovenantId`, `OpOutputAuthorizingInput`), and verify preimages against P2SH hashes.
+- **Shared transaction payload:** Every input script can also inspect the transaction's `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`.
 
 > [!NOTE]
 > The main text on this page stays language-agnostic and describes L1 transaction mechanics directly. Color-coded snippet boxes illustrate each pattern across three tiers: **Silverscript · L1 Opcodes** (raw L1 script calls), **Argent · Implemented** (working [Argent](./argent) syntax today), and **Argent · Proposed Syntax** (design prototypes not yet implemented in the compiler).
@@ -47,7 +51,7 @@ Most cross-covenant interactions on Kaspa fall into four patterns, distinguished
 | ------------------------------------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
 | 1. Presence-only co-spend            | Peer `covenant_id` only                                                        | Covenant-owned custody (`KCC-2`), mint proxies, delegated authority  |
 | 2. State observation (closed & open) | Peer's fixed state layout (`template_hash` pinned at compile time or in state) | Controller/asset pairs, permissionless DEXs, asset-agnostic vaults   |
-| 3. Payload-mediated dynamic dispatch | Peer `covenant_id` + message format in `tx.payload` (no shared state layout)   | Dynamic fee/policy hooks, shared oracle/KIP-21 verification, routers |
+| 3. Dynamic dispatch (computed reads) | Peer `covenant_id` + statement interface (no shared state layout)              | Dynamic fee/policy hooks, shared oracle/KIP-21 verification, routers |
 | 4. Genesis-spawn composition         | Recomputed KIP-20 genesis `covenant_id` of newly created child outputs         | Factories, pair registries, market creators launching sub-apps       |
 
 ### 1. Presence-only co-spend (delegated authority)
@@ -204,64 +208,18 @@ require peer.outputs become { target <- self.peer_type(expected) };
 
 </PatternSnippet>
 
-### 3. Payload-mediated communication and dynamic dispatch
+### 3. Dynamic dispatch (computed reads)
 
 Even **open** state observation is still like a **raw storage read**: the observer inspects the peer's serialized state directly, so it remains statically bound to a fixed on-chain state structure (the agreed capsule layout).
 
 Often, a covenant wants a **computed read** instead — it does not write to the peer or care how the peer serializes state, it just wants a result computed by the peer's own logic for this transaction: _what fee rate applies to this swap? What is the authenticated oracle price or KIP-21 block timestamp? Is this withdrawal authorized under current policy?_ Two peer covenants can even hold identical state yet return different answers under different logic.
 
-Every input script in a v1 transaction can inspect the same transaction `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`. That turns `tx.payload` into an **ephemeral, read-only message bus** shared across all co-spent covenants for one transaction, removing the static state-layout constraint entirely:
+On a UTXO chain with no runtime call stack, dynamic dispatch works through **propose-then-verify over an ephemeral per-transaction message bus**:
 
-- **Decoupled dynamic dispatch ("propose the result, then verify it"):** Rather than binding to the callee's state structure or template, both sides bind **only to the message format in `tx.payload`**. The transaction composer places a structured **statement record** — `(method, arguments, proposed result)` — into the service input's section of `tx.payload`:
-  - **The caller** resolves the service input (for example, the leader of a stored `covenant_id`), reads the selected statement from that input's payload section, checks that the method and arguments match what it intended, and uses the proposed result.
-  - **The callee (service)** verifies its own section header and every statement in its section against whatever internal state, witnesses, and rules it chooses — it can use any state layout it wants, or even recreate its UTXO unchanged. Any entrypoint that does _not_ serve calls requires an **empty section** for its input, so an admin or housekeeping spend can run cleanly while rejecting any transaction that claims it served a call.
-- **Shared verification and witness deduplication:** One service input can verify expensive data once (a signed oracle report, a KIP-21 sequencing commitment opening, or shared settlement parameters) and serve the authenticated statement in `tx.payload` to multiple co-spent caller inputs in the same transaction without repeating the verification or witness bytes.
-
-Because `tx.payload` is global to the transaction and Kaspa Script has no unbounded loops, independent contracts sharing a payload channel need a clean **framing convention** (for example, a versioned envelope prefix and a fixed-width section directory indexed by transaction input so callers jump directly to a statement and callees verify their full section within a known bound). See the [Kas-Smiths proposal on Inter-Covenant Communication with Dynamic Dispatch](https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171) for the full design discussion.
-
-> [!IMPORTANT]
-> **Avoid ad-hoc `tx.payload` protocols for open composability:** Because `tx.payload` is a single transaction-wide field (already shared with based apps, messaging, and metadata conventions), two independent covenants that each assume they own byte `0` cannot be co-spent in the same transaction. Prefer **Pattern 2 (state observation)** for open cross-app composition today, reserve ad-hoc payload layouts for tightly coupled flows you control end to end, and wait for a shared payload-framing KCC before relying on `tx.payload` for ecosystem-wide dynamic dispatch.
-
-<PatternSnippet
-  status="silverscript"
-  title="Shared payload section checks in raw Silverscript"
->
-
-At the L1 script layer, both caller and service read the exact same transaction payload slices via `OpTxPayloadLen` and `OpTxPayloadSubstr` (assuming a fixed-width section directory indexed by input index):
-
-```solidity
-// --- Caller covenant (e.g. DEX pair asking a fee policy for a quote) ---
-require(OpCovInputCount(fees_cov_id) > 0);
-int service_in = OpCovInputIdx(fees_cov_id, 0);
-
-// Read the service input's directory entry: [section_start (4B), section_len (4B)]
-int dir_off = HEADER_LEN + service_in * 8;
-require(OpTxPayloadLen() >= dir_off + 8);
-int sec_start = OpBin2Num(OpTxPayloadSubstr(dir_off, dir_off + 4));
-int sec_len   = OpBin2Num(OpTxPayloadSubstr(dir_off + 4, dir_off + 8));
-
-// Verify the chosen statement record matches (METHOD_QUOTE, expected_args, fee_bps)
-require(stmt_off >= sec_start && stmt_off + STMT_LEN <= sec_start + sec_len);
-byte[] stmt = OpTxPayloadSubstr(stmt_off, stmt_off + STMT_LEN);
-require(stmt == METHOD_QUOTE + expected_args + OpNum2Bin(fee_bps, 8));
-
-// --- Service covenant (e.g. fee policy verifying its own input section) ---
-int my_dir = HEADER_LEN + OpTxInputIndex() * 8;
-require(OpTxPayloadLen() >= my_dir + 8);
-int my_start = OpBin2Num(OpTxPayloadSubstr(my_dir, my_dir + 4));
-int my_len   = OpBin2Num(OpTxPayloadSubstr(my_dir + 4, my_dir + 8));
-
-// On a serving entry (1 statement): verify header + recompute the proposed result:
-require(my_len == STMT_LEN);
-require(OpTxPayloadLen() >= my_start + STMT_LEN);
-byte[] served = OpTxPayloadSubstr(my_start, my_start + STMT_LEN);
-require(served == METHOD_QUOTE + args_bytes + OpNum2Bin(computed_fee_bps, 8));
-
-// On a non-serving entry (e.g. admin update): reject any claimed statements:
-// require(my_len == 0);
-```
-
-</PatternSnippet>
+- **Propose the statement, verify from both sides:** The transaction composer attaches one or more structured **statement records** — `(method, arguments, proposed result)` — to the service input's message bus for this transaction. Both sides verify the same bytes independently:
+  - **The caller** resolves the service input (for example, the leader of a stored `covenant_id`), reads the statement record from that service input's bus, checks that the method and arguments match what it intended, and uses the proposed result.
+  - **The callee (service)** verifies every statement on its bus against whatever internal state, witnesses, and rules it chooses — it can use any state layout it wants, or recreate its UTXO unchanged. Crucially, every **non-serving entrypoint and non-serving actor** in the service's covenant family must enforce an **empty bus**, so an admin or unrelated spend can run cleanly while rejecting any transaction that claims it served a call.
+- **Shared verification across callers:** Because a statement belongs to the service input, one service input can verify expensive data once (a signed oracle report, a KIP-21 sequencing commitment opening, or shared policy parameters) and serve the authenticated result to several co-spent caller inputs in the same transaction.
 
 <PatternSnippet
   status="prototype"
@@ -270,7 +228,7 @@ require(served == METHOD_QUOTE + args_bytes + OpNum2Bin(computed_fee_bps, 8));
   sourceHref="https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171"
 >
 
-A proposed higher-level Argent surface would hide the payload directory plumbing behind typed `interface` declarations and unconditional `serve` assertions (not yet implemented in `argentc`):
+At the language level, callers and callees stay completely agnostic to how the underlying message bus is encoded. A proposed Argent surface expresses this with typed `interface` declarations and unconditional `serve` assertions (not yet implemented in `argentc`):
 
 ```rust
 interface SwapFee {
@@ -292,9 +250,58 @@ actor ImbalanceFees owns FeeState implements SwapFee {
 }
 ```
 
-An entry with two `serve` clauses would expect exactly two records in its payload section and verify both; an entry with no `serve` clause (such as an admin update) would automatically require an empty section (`my_len == 0`).
+An entry with two `serve` clauses expects exactly two records on its bus and checks both; any non-serving entry or non-serving actor in the family automatically requires an empty bus.
 
 </PatternSnippet>
+
+#### Under the hood: where does the message bus live?
+
+The details below are a low-level look at the transport options under active discussion — meant to give you an idea of what L1 makes possible and how the tooling and conventions are evolving, rather than plumbing you are expected to hand-wire for every app.
+
+Two main places in a v1 transaction can carry a service input's statement bus:
+
+**Option 1 — First push of the service input's `signature_script` (per-input bus):**
+
+Because every input already owns its own `signature_script` (readable by peer inputs via `OpTxInputScriptSigSubstr`), placing the bus there avoids any global namespace contention with based apps, messaging, or metadata protocols, needs no transaction-wide directory, and keeps ephemeral call transcripts with witness data (outside `txid`).
+
+Using `signature_script` does require care around Script framing and aliasing:
+
+- In P2SH, the final push must be the redeem script, so the bus belongs at **offset `0`** (the very first push).
+- Standard Script push opcodes change header length across size thresholds, and if a non-serving entry or non-serving actor in the same covenant family left offset `0` unconstrained, an attacker could craft a normal witness argument to byte-alias a serving statement.
+
+A clean compiler-managed scheme addresses both: reserve the **first push** at offset `0` across _all_ generated Silverscript entrypoints of the covenant family (hidden by high-level Argent code and accessed only through `serve`/interface syntax), give the bus a **fixed-length layout** bounded by compile-time known limits so callers read predictable offsets directly via `OpTxInputScriptSigSubstr(service_in, ...)`, and have every **non-serving entrypoint and non-serving actor** enforce `bus.length == 0`.
+
+<PatternSnippet
+  status="silverscript"
+  title="Per-input signature-script bus sketch in raw Silverscript"
+>
+
+Illustrative low-level sketch showing a fixed-offset leading bus push (`OpTxInputScriptSigSubstr`) shared across every Silverscript entrypoint in a service covenant family:
+
+```solidity
+// --- Service covenant family (every Silverscript entrypoint receives `byte[] icc_bus` first) ---
+// On a serving entry (fixed-width record at known compile-time size):
+require(icc_bus.length == STMT_LEN);
+require(icc_bus == METHOD_QUOTE + args_bytes + OpNum2Bin(computed_fee_bps, 8));
+
+// On every non-serving entry AND every non-serving actor in the family:
+require(icc_bus.length == 0);
+
+// --- Caller covenant (reads the service input's leading push at offset 0) ---
+require(OpCovInputCount(fees_cov_id) > 0);
+int service_in = OpCovInputIdx(fees_cov_id, 0);
+
+// Skip the fixed push-opcode header (`PUSH_HDR_LEN`) at offset 0 of `service_in`:
+require(OpTxInputScriptSigLen(service_in) >= PUSH_HDR_LEN + STMT_LEN);
+byte[] stmt = OpTxInputScriptSigSubstr(service_in, PUSH_HDR_LEN, PUSH_HDR_LEN + STMT_LEN);
+require(stmt == METHOD_QUOTE + expected_args + OpNum2Bin(fee_bps, 8));
+```
+
+</PatternSnippet>
+
+**Option 2 — Shared transaction payload (`tx.payload`):**
+
+Every input can also read `tx.payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`. That gives raw contiguous bytes with no Script push-opcode framing and commits the call transcript into v1 `txid` via `PayloadDigest`. However, because `tx.payload` is a single transaction-wide field shared with based apps, messaging, and metadata conventions, independent contracts cannot pick ad-hoc offsets without breaking composability — using `tx.payload` for open dynamic dispatch would require a shared **payload-framing KCC** (a versioned envelope prefix plus a fixed-width per-input section directory, as explored in [Kas-Smiths #171](https://kas-smiths.org/t/inter-covenant-communication-with-dynamic-dispatch/171)).
 
 ### 4. Genesis-spawn composition (atomic sub-app creation)
 
@@ -338,21 +345,21 @@ emits next: Controller {
 
 ## Worked example: shared service covenants and upgradable ZK routers
 
-Choosing between **state observation (raw read)** and **payload dynamic dispatch (computed read)** shows up clearly in a real L1 problem: how an immutable covenant can delegate an evolving cryptographic dependency to an opt-in shared covenant.
+Choosing between **state observation (raw read)** and **dynamic dispatch (computed read)** shows up clearly in a real L1 problem: how an immutable covenant can delegate an evolving cryptographic dependency to an opt-in shared covenant.
 
 Consider an application covenant that verifies BN254 Groth16 proofs via [`OpZkPrecompile(0x20)`](./inline-zk) (for example, a RISC Zero Groth16 verifier whose wrapper parameters can change after a prover SDK upgrade such as [GHSA-g6qg-9j8p-7j87](./inline-zk#risc-zero-advisory-and-remediation)). Hardcoding a verifying key or control root directly into every user UTXO forces a manual migration whenever proving parameters rotate.
 
 ### Simpler default: a key-registry router (state observation)
 
-If the router only acts as a **registry of the currently active verifying key** (storing `active_vk_hash` in its UTXO state), it does _not_ need `tx.payload` or dynamic dispatch — a straightforward state read (Pattern 2) is both simpler and safer:
+If the router only acts as a **registry of the currently active verifying key** (storing `active_vk_hash` in its UTXO state), it does _not_ need dynamic dispatch or a message bus — a straightforward state read (Pattern 2) is both simpler and safer:
 
 ```mermaid
 flowchart TB
     classDef app fill:#eef9ef,stroke:#4d9f5b,color:#132016
     classDef router fill:#f7f1ff,stroke:#8b68ca,color:#1d162b
 
-    RTR["Key-registry router input<br/>state: active_vk_hash<br/>(recreates itself unchanged, or rotates under governance)"]:::router
-    APP["App covenant input<br/>1. observe router input state -> read active_vk_hash<br/>2. check blake3(verifying_key) == active_vk_hash<br/>3. bind image_id + journal and run OpZkPrecompile(0x20)"]:::app
+    RTR["Key-registry router<br/>state: active_vk_hash<br/>witness spend or rotate"]:::router
+    APP["App covenant input<br/>1. read active_vk_hash<br/>2. check blake3(vk)<br/>3. run OpZkPrecompile"]:::app
 
     APP -. "reads active_vk_hash" .-> RTR
 ```
@@ -389,14 +396,14 @@ g16.verify(verifying_key, proof, image_id, journal_digest);
 
 </PatternSnippet>
 
-### When a payload channel or dynamic dispatch makes sense
+### When dynamic dispatch makes sense
 
-Pattern 3 (`tx.payload` / computed read) only becomes necessary when a plain registry read is no longer enough — for example, when multiple co-spent app inputs want to share one large verifying key in `tx.payload` without repeating it in every signature script, or when the router runs richer verification/routing logic itself (such as verifying a proof once and serving the result to several callers, or choosing dynamically among proof systems and epochs). For open multi-app routers, this path depends on a shared payload-framing KCC so independent covenants do not collide on `tx.payload`.
+Pattern 3 (computed read over a message bus) becomes useful when a plain registry read is no longer enough — for example, when multiple co-spent app inputs want to share one large verifying key without repeating it in every signature script, when the router verifies a proof once and serves the result to several callers, or when you do not want the interface to statically commit to the router's state layout and template at all (abstracting the router's internal representation).
 
 ### Operational invariants for shared routers
 
 - **Revocation across parallel replicas (all routers):** A single router UTXO serializes spends to one per block (~10/s), so busy routers will typically split into parallel replicas (the same expand-and-contract pattern used by [`PublicMint` and `TokenSeed`](./kccs/kcc20#expand-and-contract-frontiers-publicmint-and-tokenseed)). When revoking compromised parameters, governance must either replace every live replica or enforce epoch/time-bounded validity so stale replicas cannot remain spendable.
-- **No unvalidated spend paths (payload / presence routers):** Whenever callers rely on co-spend presence plus `tx.payload` instead of reading the router's state directly, every spend path preserving the router's `covenant_id` must either validate the payload or require an empty payload section so admin or housekeeping spends cannot be piggybacked.
+- **No unvalidated spend paths (service-bus / presence routers):** Whenever callers rely on co-spend presence plus a message bus instead of reading the router's state directly, every non-serving entrypoint and non-serving actor preserving the router's `covenant_id` must enforce an empty bus (`bus.length == 0`) so admin or housekeeping spends cannot be piggybacked.
 
 ## How the stack supports these patterns
 
@@ -404,7 +411,7 @@ Because every pattern above is built from native L1 transaction rules, you can a
 
 | Layer                              | What it gives you                                                                                                             |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **[Silverscript](./silverscript)** | Direct access to `OpCov*`, `OpOutput*`, `OpTxPayloadLen` / `OpTxPayloadSubstr`, and `validateOutputState` for any pattern     |
+| **[Silverscript](./silverscript)** | Direct access to `OpCov*`, `OpOutput*`, `OpTxInputScriptSigSubstr`, `OpTxPayloadSubstr`, and `validateOutputState`            |
 | **[KCCs](./kccs)**                 | Standardized state layouts ([KCC-1](./kccs), [KCC-20](./kccs/kcc20)) and co-spend authority schemes (`covenant-id/v1`, KCC-2) |
 | **[Argent](./argent)**             | Checked source-level abstractions for `.co_spent()`, closed/open `observes`, `actor_type<State>` capsules, and `spawns`       |
 
