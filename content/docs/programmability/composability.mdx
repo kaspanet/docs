@@ -190,7 +190,8 @@ A receipt field needs no dedicated language feature — it is a convention over 
 byte[32] receipt = blake3(
     byte[](TAG_TRANSFER) + byte[](from) + byte[](to) + OpNum2Bin(amount, 8)
 );
-// become next <- Peer(next_peer); // with `last_op: receipt`
+PeerCapsule next_peer = { ..., last_op: receipt };
+become next <- Peer(next_peer);
 
 // Co-spent observer checks the declared receipt on the peer output
 // without re-deriving conservation across every peer input and output:
@@ -205,9 +206,9 @@ require peer.outputs become { target <- self.peer_type(expected) };
 
 ### 3. Payload-mediated communication and dynamic dispatch
 
-Even **open** state observation is still static in one important way: the observer remains bound to a **fixed on-chain state structure** (the agreed capsule layout), and the peer's UTXO state must conform to it.
+Even **open** state observation is still like a **raw storage read**: the observer inspects the peer's serialized state directly, so it remains statically bound to a fixed on-chain state structure (the agreed capsule layout).
 
-Sometimes a covenant does not care how its peer stores state at all — it simply wants **an answer to a question about the current transaction**: _what fee rate applies to this swap? What is the authenticated oracle price or KIP-21 block timestamp? Is this withdrawal authorized under current policy?_
+Often, a covenant wants a **computed read** instead — it does not write to the peer or care how the peer serializes state, it just wants a result computed by the peer's own logic for this transaction: _what fee rate applies to this swap? What is the authenticated oracle price or KIP-21 block timestamp? Is this withdrawal authorized under current policy?_ Two peer covenants can even hold identical state yet return different answers under different logic.
 
 Every input script in a v1 transaction can inspect the same transaction `payload` via `OpTxPayloadLen` and `OpTxPayloadSubstr`. That turns `tx.payload` into an **ephemeral, read-only message bus** shared across all co-spent covenants for one transaction, removing the static state-layout constraint entirely:
 
